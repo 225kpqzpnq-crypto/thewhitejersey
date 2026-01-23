@@ -15,6 +15,14 @@
     {
       "source": "/workout/:path*",
       "destination": "https://rowing-workout-app.vercel.app/:path*"
+    },
+    {
+      "source": "/zones",
+      "destination": "https://zones-mu.vercel.app"
+    },
+    {
+      "source": "/zones/:path*",
+      "destination": "https://zones-mu.vercel.app/:path*"
     }
   ]
 }
