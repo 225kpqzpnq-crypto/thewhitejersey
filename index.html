@@ -8,6 +8,7 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open */
         }
         .hero-section {
             background-image: url('https://github.com/225kpqzpnq-crypto/thewhitejersey/blob/2e53977f6244d89dc11066d08b85479468c5410b/BG.jpeg?raw=true');
@@ -38,13 +39,82 @@
             text-align: center;
             z-index: 1; /* Ensure text is above the overlay */
         }
+
+        /* Hamburger menu icon */
+        .menu-icon {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001; /* Above everything else */
+            cursor: pointer;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background for visibility */
+            border-radius: 5px;
+        }
+
+        .menu-icon .bar {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 5px 0;
+            transition: 0.4s;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            height: 100%;
+            width: 0; /* 0 width by default, expanded with JS */
+            position: fixed;
+            top: 0;
+            right: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            z-index: 1000;
+        }
+
+        .sidebar a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
     </style>
 </head>
 <body>
+    <div class="menu-icon" onclick="toggleSidebar()">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <a href="./workout-app/">Workout App</a>
+        <a href="./zone-calc/">Zone Calc</a>
+    </div>
+
     <div class="hero-section">
         <div class="overlay">
             <h1>THE WHITE JERSEY</h1>
         </div>
     </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar.style.width === "250px") {
+                sidebar.style.width = "0";
+            } else {
+                sidebar.style.width = "250px";
+            }
+        }
+    </script>
 </body>
 </html>
