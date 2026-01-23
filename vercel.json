@@ -1,15 +1,19 @@
 {
   "rewrites": [
     {
+      "source": "/rowing",
+      "destination": "https://rowing-workout-app.vercel.app"
+    },
+    {
+      "source": "/rowing/:path*",
+      "destination": "https://rowing-workout-app.vercel.app/:path*"
+    },
+    {
       "source": "/workout",
       "destination": "https://rowing-workout-app.vercel.app"
     },
     {
       "source": "/workout/:path*",
-      "destination": "https://rowing-workout-app.vercel.app/:path*"
-    },
-    {
-      "source": "/rowing/:path*",
       "destination": "https://rowing-workout-app.vercel.app/:path*"
     }
   ]
