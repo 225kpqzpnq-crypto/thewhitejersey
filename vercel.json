@@ -10,11 +10,11 @@
     },
     {
       "source": "/workout-app/:path*",
-      "destination": "https://thewhitejersey-k2hc.vercel.app/:path*"
+      "destination": "https://workout-app-chi-gray.vercel.app/:path*"
     },
     {
       "source": "/workout-app",
-      "destination": "https://thewhitejersey-k2hc.vercel.app/index.html"
+      "destination": "https://workout-app-chi-gray.vercel.app/index.html"
     }
   ]
 }
