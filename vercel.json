@@ -2,15 +2,15 @@
   "rewrites": [
     {
       "source": "/rowing",
-      "destination": "https://landing-eta-five-39.vercel.app"
+      "destination": "https://landing-eta-five-39.vercel.app/index.html"
     },
     {
       "source": "/rowing/:path*",
-      "destination": "https://landing-eta-five-39.vercel.app:path*"
+      "destination": "https://landing-eta-five-39.vercel.app/:path*"
     },
     {
       "source": "/workout",
-      "destination": "https://rowing-workout-app.vercel.app"
+      "destination": "https://rowing-workout-app.vercel.app/index.html"
     },
     {
       "source": "/workout/:path*",
@@ -18,7 +18,7 @@
     },
     {
       "source": "/zones",
-      "destination": "https://zones-mu.vercel.app"
+      "destination": "https://zones-mu.vercel.app/index.html"
     },
     {
       "source": "/zones/:path*",
