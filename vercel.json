@@ -1,28 +1,20 @@
 {
   "rewrites": [
     {
-      "source": "/rowing",
-      "destination": "https://landing-eta-five-39.vercel.app/index.html"
+      "source": "/zone-calc/:path*",
+      "destination": "https://zones-mu.vercel.app/:path*"
     },
     {
-      "source": "/rowing/:path*",
-      "destination": "https://landing-eta-five-39.vercel.app/:path*"
-    },
-    {
-      "source": "/workout",
-      "destination": "https://rowing-workout-app.vercel.app/index.html"
-    },
-    {
-      "source": "/workout/:path*",
-      "destination": "https://rowing-workout-app.vercel.app/:path*"
-    },
-    {
-      "source": "/zones",
+      "source": "/zone-calc",
       "destination": "https://zones-mu.vercel.app/index.html"
     },
     {
-      "source": "/zones/:path*",
-      "destination": "https://zones-mu.vercel.app/:path*"
+      "source": "/workout-app/:path*",
+      "destination": "https://rowing-workout-app.vercel.app/:path*"
+    },
+    {
+      "source": "/workout-app",
+      "destination": "https://rowing-workout-app.vercel.app/index.html"
     }
   ]
 }
