@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/rowing",
-      "destination": "https://rowing-workout-app.vercel.app"
+      "destination": "https://landing-eta-five-39.vercel.app"
     },
     {
       "source": "/rowing/:path*",
-      "destination": "https://rowing-workout-app.vercel.app/:path*"
+      "destination": "https://landing-eta-five-39.vercel.app:path*"
     },
     {
       "source": "/workout",
