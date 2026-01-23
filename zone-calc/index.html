@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rowing Zones Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/zones/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Rowing Zones Calculator</h1>
+        <div class="input-group">
+            <label for="max-hr-slider">Max HR:</label>
+            <div class="slider-container">
+                <input type="range" id="max-hr-slider" min="100" max="220" value="180">
+                <input type="number" id="max-hr-manual" min="100" max="220" value="180" class="manual-input">
+            </div>
+        </div>
+        <div class="input-group">
+            <label for="resting-hr-slider">Resting HR:</label>
+            <div class="slider-container">
+                <input type="range" id="resting-hr-slider" min="30" max="100" value="50">
+                <input type="number" id="resting-hr-manual" min="30" max="100" value="50" class="manual-input">
+            </div>
+        </div>
+        
+        <div class="zones-output">
+            <h2>Your Rowing Zones (Karnoven Method)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Zone</th>
+                        <th>% HRR Description</th>
+                        <th>Low HR</th>
+                        <th>High HR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="zone-1-row">
+                        <td>Zone 1</td>
+                        <td>Very Light (50-60% HRR)</td>
+                        <td class="low-hr"></td>
+                        <td class="high-hr"></td>
+                    </tr>
+                    <tr id="zone-2-row">
+                        <td>Zone 2</td>
+                        <td>Light (60-70% HRR)</td>
+                        <td class="low-hr"></td>
+                        <td class="high-hr"></td>
+                    </tr>
+                    <tr id="zone-3-row">
+                        <td>Zone 3</td>
+                        <td>Moderate (70-80% HRR)</td>
+                        <td class="low-hr"></td>
+                        <td class="high-hr"></td>
+                    </tr>
+                    <tr id="zone-4-row">
+                        <td>Zone 4</td>
+                        <td>Hard (80-90% HRR)</td>
+                        <td class="low-hr"></td>
+                        <td class="high-hr"></td>
+                    </tr>
+                    <tr id="zone-5-row">
+                        <td>Zone 5</td>
+                        <td>Max Effort (90-100% HRR)</td>
+                        <td class="low-hr"></td>
+                        <td class="high-hr"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="waterfall-graph">
+            <h2>Zone Waterfall Graph</h2>
+            <div class="graph-container">
+                <div class="graph-zone zone-color-1" id="graph-zone-1">
+                    <span class="high-hr-label"></span>
+                    <span class="zone-name-label">Zone 1</span>
+                    <span class="low-hr-label"></span>
+                </div>
+                <div class="graph-zone zone-color-2" id="graph-zone-2">
+                    <span class="high-hr-label"></span>
+                    <span class="zone-name-label">Zone 2</span>
+                    <span class="low-hr-label"></span>
+                </div>
+                <div class="graph-zone zone-color-3" id="graph-zone-3">
+                    <span class="high-hr-label"></span>
+                    <span class="zone-name-label">Zone 3</span>
+                    <span class="low-hr-label"></span>
+                </div>
+                <div class="graph-zone zone-color-4" id="graph-zone-4">
+                    <span class="high-hr-label"></span>
+                    <span class="zone-name-label">Zone 4</span>
+                    <span class="low-hr-label"></span>
+                </div>
+                <div class="graph-zone zone-color-5" id="graph-zone-5">
+                    <span class="high-hr-label"></span>
+                    <span class="zone-name-label">Zone 5</span>
+                    <span class="low-hr-label"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Get elements
+        const maxHrSlider = document.getElementById('max-hr-slider');
+        const maxHrManual = document.getElementById('max-hr-manual');
+        const restingHrSlider = document.getElementById('resting-hr-slider');
+        const restingHrManual = document.getElementById('resting-hr-manual');
+
+        // Initial calculation on page load
+        document.addEventListener('DOMContentLoaded', calculateZones);
+
+        // Synchronize Max HR inputs and update zones
+        maxHrSlider.addEventListener('input', () => {
+            maxHrManual.value = maxHrSlider.value;
+            calculateZones();
+        });
+        maxHrManual.addEventListener('input', () => {
+            let value = parseInt(maxHrManual.value);
+            if (isNaN(value)) value = parseInt(maxHrManual.min);
+            if (value < parseInt(maxHrManual.min)) value = parseInt(maxHrManual.min);
+            if (value > parseInt(maxHrManual.max)) value = parseInt(maxHrManual.max);
+            maxHrSlider.value = value;
+            maxHrManual.value = value;
+            calculateZones();
+        });
+
+        // Synchronize Resting HR inputs and update zones
+        restingHrSlider.addEventListener('input', () => {
+            restingHrManual.value = restingHrSlider.value;
+            calculateZones();
+        });
+        restingHrManual.addEventListener('input', () => {
+            let value = parseInt(restingHrManual.value);
+            if (isNaN(value)) value = parseInt(restingHrManual.min);
+            if (value < parseInt(restingHrManual.min)) value = parseInt(restingHrManual.min);
+            if (value > parseInt(restingHrManual.max)) value = parseInt(restingHrManual.max);
+            restingHrSlider.value = value;
+            restingHrManual.value = value;
+            calculateZones();
+        });
+        
+        function calculateZones() {
+            const maxHr = parseInt(maxHrManual.value);
+            const restingHr = parseInt(restingHrManual.value);
+
+            // Clear previous alerts to prevent multiple pop-ups
+            const oldAlert = document.getElementById('input-alert');
+            if (oldAlert) oldAlert.remove();
+
+            if (isNaN(maxHr) || isNaN(restingHr) || maxHr <= restingHr) {
+                const alertDiv = document.createElement('div');
+                alertDiv.id = 'input-alert';
+                alertDiv.style.color = 'red';
+                alertDiv.style.marginTop = '15px';
+                alertDiv.textContent = 'Please enter valid Max HR and Resting HR, where Max HR is greater than Resting HR.';
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.zones-output'));
+                
+                // Clear table and graph displays if inputs are invalid
+                document.querySelectorAll('.zones-output .low-hr').forEach(td => td.textContent = '');
+                document.querySelectorAll('.zones-output .high-hr').forEach(td => td.textContent = '');
+                document.querySelectorAll('.graph-zone').forEach(zone => {
+                    zone.style.height = '0';
+                    zone.style.marginBottom = '0';
+                    zone.querySelector('.zone-name-label').textContent = '';
+                    zone.querySelector('.low-hr-label').textContent = '';
+                    zone.querySelector('.high-hr-label').textContent = '';
+                });
+                return;
+            }
+
+            const hrr = maxHr - restingHr;
+            const graphScale = 3; // Consistent scale factor for both height and margin
+
+            const zonesConfig = {
+                'zone-1': { min: 0.50, max: 0.60, graphId: 'graph-zone-1', name: 'Zone 1', rowId: 'zone-1-row', description: 'Very Light (50-60% HRR)' },
+                'zone-2': { min: 0.60, max: 0.70, graphId: 'graph-zone-2', name: 'Zone 2', rowId: 'zone-2-row', description: 'Light (60-70% HRR)' },
+                'zone-3': { min: 0.70, max: 0.80, graphId: 'graph-zone-3', name: 'Zone 3', rowId: 'zone-3-row', description: 'Moderate (70-80% HRR)' },
+                'zone-4': { min: 0.80, max: 0.90, graphId: 'graph-zone-4', name: 'Zone 4', rowId: 'zone-4-row', description: 'Hard (80-90% HRR)' },
+                'zone-5': { min: 0.90, max: 1.00, graphId: 'graph-zone-5', name: 'Zone 5', rowId: 'zone-5-row', description: 'Max Effort (90-100% HRR)' }
+            };
+
+            // Calculate minHr for Zone 1 once to use as a baseline for marginBottom
+            const minHrZone1 = Math.round(restingHr + (hrr * zonesConfig['zone-1'].min));
+
+
+            for (const zoneId in zonesConfig) {
+                const zone = zonesConfig[zoneId];
+                const minHr = Math.round(restingHr + (hrr * zone.min));
+                const maxHrCalc = Math.round(restingHr + (hrr * zone.max));
+                
+                // Update table
+                document.querySelector(`#${zone.rowId} .low-hr`).textContent = `${minHr} bpm`;
+                document.querySelector(`#${zone.rowId} .high-hr`).textContent = `${maxHrCalc} bpm`;
+
+                // Update waterfall graph
+                const graphZoneElement = document.getElementById(zone.graphId);
+                const zoneHeight = (maxHrCalc - minHr) * graphScale; 
+                
+                // Revised marginBottomValue calculation: relative to minHrZone1
+                const marginBottomValue = (minHr - minHrZone1) * graphScale;
+
+                graphZoneElement.style.height = `${zoneHeight}px`;
+                graphZoneElement.style.marginBottom = `${marginBottomValue}px`;
+                graphZoneElement.querySelector('.zone-name-label').textContent = zone.name;
+                graphZoneElement.querySelector('.low-hr-label').textContent = `${minHr} bpm`;
+                graphZoneElement.querySelector('.high-hr-label').textContent = `${maxHrCalc} bpm`;
+            }
+        }
+    </script>
+</body>
+</html>

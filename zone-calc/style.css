@@ -1,0 +1,199 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px; /* Increased max-width for the table */
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: bold;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between slider and number input */
+}
+
+input[type="range"] {
+    flex-grow: 1;
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    background: #ddd;
+    outline: none;
+    height: 8px;
+    border-radius: 5px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+
+.manual-input {
+    width: 70px; /* Adjust width as needed */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Dynamic Alert Styling */
+#input-alert {
+    margin-top: 15px;
+    color: red;
+    font-weight: bold;
+}
+
+
+.zones-output {
+    text-align: left;
+    border-top: 1px solid #eee;
+    padding-top: 25px;
+    margin-top: 25px;
+}
+
+.zones-output h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+    text-align: center;
+}
+
+/* Table Styling */
+.zones-output table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.zones-output th, .zones-output td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.zones-output th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #555;
+}
+
+.zones-output tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.zones-output tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Waterfall Graph Styling */
+.waterfall-graph {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #eee;
+    text-align: center;
+}
+
+.waterfall-graph h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.graph-container {
+    display: flex;
+    align-items: flex-end; /* Align bars to the bottom */
+    justify-content: center;
+    gap: 5px;
+    height: 250px; /* Increased height for the graph area to accommodate labels */
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    position: relative; /* For absolute positioning of total HR range labels if needed */
+}
+
+.graph-zone {
+    width: 18%; /* Distribute width among 5 zones */
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    align-items: center;
+    justify-content: space-between; /* Distribute space between items */
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.3s ease-out, margin-bottom 0.3s ease-out; /* Smooth transition */
+    position: relative; /* For absolute positioning of text if needed */
+    padding: 5px 0; /* Add some padding inside the bar */
+    /* min-height: 40px;  Removed to allow dynamic scaling and prevent floating */
+}
+
+.graph-zone .zone-name-label {
+    flex-grow: 1; /* Allows the name to take up available space */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    white-space: nowrap;
+}
+
+.low-hr-label, .high-hr-label {
+    font-size: 10px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    line-height: 1; /* Compact line height */
+    margin: 2px 0; /* Small vertical margin */
+}
+
+
+/* Zone Colors */
+.zone-color-1 { background-color: #4CAF50; /* Green */ }
+.zone-color-2 { background-color: #8BC34A; /* Light Green */ }
+.zone-color-3 { background-color: #FFEB3B; /* Yellow */ }
+.zone-color-4 { background-color: #FF9800; /* Orange */ }
+.zone-color-5 { background-color: #F44336; /* Red */ }
