@@ -1,0 +1,330 @@
+:root {
+    --primary-color: #000080; /* Navy Blue */
+    --primary-color-dark: #00005a;
+    --secondary-color: #6c757d;
+    --rest-color: #006400; /* Dark Green */
+    --rest-color-dark: #004b00;
+    --background-color: #f8f9fa;
+    --text-color: #212529;
+    --white: #fff;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+}
+
+#app {
+    width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+@media (max-width: 540px) {
+    #app {
+        width: 90%;
+    }
+}
+
+.screen {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+#app h1 {
+    margin-bottom: 20px;
+}
+
+
+.screen h2 {
+    font-size: 1.2rem;
+    margin-top: 20px; /* Add some space above the headings */
+    margin-bottom: 10px;
+}
+
+.default-workouts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.default-workout-btn {
+    background-color: #F0F0F0; /* Light grey */
+    color: var(--text-color); /* Keep text readable */
+    border: 1px solid #808080; /* Dark grey border */
+    border-radius: var(--border-radius);
+    padding: 15px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease; /* Add border-color to transition */
+    height: 100px; /* Fixed height for better alignment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.default-workout-btn:hover {
+    background-color: #D3D3D3; /* Slightly darker light grey on hover */
+    border-color: #696969; /* Darker grey border on hover */
+}
+
+.default-workout-btn:active {
+    background-color: #BFBFBF; /* Even darker grey when active */
+    border-color: #555555; /* Even darker border when active */
+    transform: translateY(1px); /* Slight press effect */
+}
+
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn:active {
+    background-color: #000040; /* Even darker blue when active */
+    transform: translateY(1px); /* Slight press effect */
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-secondary:active {
+    background-color: #4a5258; /* Even darker grey when active */
+    transform: translateY(1px); /* Slight press effect */
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+    background-color: #f0f0f0; /* Light grey */
+    color: #000000; /* Black text */
+}
+
+.time-input-group select {
+    /* These properties are now covered by .input-group input, .input-group select */
+}
+
+.time-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.time-input-group > div {
+    flex: 1;
+}
+
+/* Workout List */
+#workout-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+#workout-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+#workout-list .btn-start {
+    padding: 8px 12px;
+    font-size: 14px;
+    width: auto;
+    background-color: #add8e6; /* Light blue */
+    color: #333; /* Dark grey text */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Little drop shadow */
+    margin-left: 10px; /* Space from name */
+}
+
+#workout-list .btn-start:hover {
+    background-color: #87ceeb; /* Slightly darker light blue on hover */
+}
+
+#workout-list .btn-start:active {
+    background-color: #6bbbd3; /* Even darker light blue when active */
+    transform: translateY(1px); /* Slight press effect */
+}
+
+.btn-delete {
+    background-color: #dc3545; /* Red for delete */
+}
+
+.btn-delete:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+.btn-delete:active {
+    background-color: #b31c2a; /* Even darker red when active */
+    transform: translateY(1px); /* Slight press effect */
+}
+
+
+
+/* Active Session */
+
+
+.interval-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.interval-display.inactive {
+    /* No opacity change, handled by component for background and text color */
+}
+
+#work-interval-display {
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+}
+
+#rest-interval-display {
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+.interval-display h2 {
+    margin: 0;
+}
+
+.interval-display .interval-time {
+    font-size: 72px;
+    font-weight: bold;
+    margin: 10px 0 0;
+}
+
+#rep-counter {
+    font-size: 20px;
+    font-weight: normal;
+    color: var(--secondary-color);
+    margin-left: 10px;
+}
+
+#work-interval-display:not(.inactive) .interval-time,
+#work-interval-display:not(.inactive) h2,
+#rest-interval-display:not(.inactive) .interval-time,
+#rest-interval-display:not(.inactive) h2 {
+    color: transparent; /* Make text transparent */
+    background-clip: text; /* Clip background to text */
+    -webkit-background-clip: text; /* For Safari */
+}
+
+/* Active Session - Landscape Mobile Layout */
+@media (max-width: 768px) and (orientation: landscape) {
+    #landscape-container {
+        display: flex;
+        flex-direction: row; /* Work and rest next to each other */
+        height: 100%; /* Take full height of main content area */
+        width: 100%;
+        gap: 10px; /* Space between work and rest groups */
+    }
+
+    .work-group,
+    .rest-group {
+        display: flex;
+        flex-direction: column; /* TimerDisplay and button stacked vertically */
+        flex: 1; /* Take equal space */
+        justify-content: center; /* Center content vertically */
+        align-items: center; /* Center content horizontally */
+        gap: 5px; /* Space between TimerDisplay and button */
+        padding: 5px; /* Add some padding to the groups */
+        border: 1px solid #eee; /* Visual separation for groups */
+        border-radius: var(--border-radius);
+    }
+
+    /* Adjust TimerDisplay to fit */
+    .work-group .interval-display,
+    .rest-group .interval-display {
+        width: 100%; /* Take full width of its parent group */
+        max-width: none; /* Override any max-width from global styles */
+        height: auto;
+        padding: 10px 5px; /* Adjust padding for smaller space */
+    }
+
+    /* Adjust buttons within groups */
+    .work-group .btn,
+    .rest-group .btn-secondary {
+        width: 90%; /* Make buttons narrower to fit */
+        margin-top: 5px; /* Add some space */
+        padding: 8px; /* Smaller padding for smaller buttons */
+        font-size: 0.9em;
+    }
+
+    /* Adjust the font size of the timer for smaller screens */
+    .interval-display .interval-time {
+        font-size: 48px; /* Smaller font size for landscape mobile */
+    }
+
+    .interval-display h2 {
+        font-size: 1em; /* Smaller font size for landscape mobile */
+    }
+
+    #rep-counter {
+        font-size: 0.8em; /* Smaller font size for landscape mobile */
+    }
+}
