@@ -1,0 +1,196 @@
+:root {
+    --primary-color: #000080; /* Navy Blue */
+    --primary-color-dark: #00005a;
+    --secondary-color: #6c757d;
+    --rest-color: #006400; /* Dark Green */
+    --rest-color-dark: #004b00;
+    --background-color: #f8f9fa;
+    --text-color: #212529;
+    --white: #fff;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+#app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.screen {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--border-radius);
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    margin-top: 10px;
+}
+
+.btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+}
+
+.time-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.time-input-group > div {
+    flex: 1;
+}
+
+/* Workout List */
+#workout-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+#workout-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+}
+
+#workout-list .btn-start {
+    padding: 8px 12px;
+    font-size: 14px;
+    width: auto;
+    background-color: #add8e6; /* Light blue */
+    color: #333; /* Dark grey text */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Little drop shadow */
+    margin-left: 10px; /* Space from name */
+}
+
+#workout-list .btn-start:hover {
+    background-color: #87ceeb; /* Slightly darker light blue on hover */
+}
+
+.btn-delete {
+    background-color: #dc3545; /* Red for delete */
+}
+
+.btn-delete:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+
+
+/* Active Session */
+#session-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px); /* Full height minus padding and button */
+    max-height: 600px;
+}
+
+.interval-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.interval-display.inactive {
+    opacity: 0.5;
+}
+
+#work-interval-display {
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+}
+
+#rest-interval-display {
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+.interval-display h2 {
+    margin: 0;
+}
+
+.interval-display .interval-time {
+    font-size: 72px;
+    font-weight: bold;
+    margin: 10px 0 0;
+}
+
+#rep-counter {
+    font-size: 20px;
+    font-weight: normal;
+    color: var(--secondary-color);
+    margin-left: 10px;
+}
+
+#work-interval-display .interval-time,
+#work-interval-display h2,
+#rest-interval-display .interval-time,
+#rest-interval-display h2 {
+    color: transparent; /* Make text transparent */
+    background-clip: text; /* Clip background to text */
+    -webkit-background-clip: text; /* For Safari */
+}
+
+
