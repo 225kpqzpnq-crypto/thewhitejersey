@@ -1,20 +1,20 @@
 {
   "rewrites": [
     {
-      "source": "/zone-calc/:path*",
-      "destination": "https://zones-mu.vercel.app/:path*"
-    },
-    {
-      "source": "/zone-calc",
-      "destination": "https://zones-mu.vercel.app/index.html"
+      "source": "/workout-app",
+      "destination": "https://workout-app-chi-gray.vercel.app/index.html"
     },
     {
       "source": "/workout-app/:path*",
       "destination": "https://workout-app-chi-gray.vercel.app/:path*"
     },
     {
-      "source": "/workout-app",
-      "destination": "https://workout-app-chi-gray.vercel.app/index.html"
+      "source": "/zone-calc",
+      "destination": "https://zones-mu.vercel.app/index.html"
+    },
+    {
+      "source": "/zone-calc/:path*",
+      "destination": "https://zones-mu.vercel.app/:path*"
     }
   ]
 }
