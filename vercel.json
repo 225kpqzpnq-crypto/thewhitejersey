@@ -15,6 +15,14 @@
     {
       "source": "/zone-calc/:path*",
       "destination": "https://zones-mu.vercel.app/:path*"
+    },
+    {
+      "source": "/rowing",
+      "destination": "https://ROWING_VERCEL_URL.vercel.app/index.html"
+    },
+    {
+      "source": "/rowing/:path*",
+      "destination": "https://ROWING_VERCEL_URL.vercel.app/:path*"
     }
   ]
 }
