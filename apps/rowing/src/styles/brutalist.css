@@ -321,10 +321,16 @@ h3 {
 /* Zone Description */
 .zone-description {
   font-size: 0.85rem;
-  padding: 15px;
+  padding: 12px 15px;
   border-left: 4px solid var(--accent-orange);
   background-color: rgba(255, 107, 0, 0.1);
-  margin-top: 10px;
+  border: 2px solid var(--dark-text);
+  border-top: none;
+  border-left: 4px solid var(--accent-orange);
+}
+
+.zone-description p {
+  margin: 0;
 }
 
 /* Prediction Card */
@@ -411,6 +417,73 @@ h3 {
   align-items: center;
 }
 
+/* Zone Table - Responsive Cards */
+.zone-table {
+  margin-bottom: 20px;
+}
+
+.zone-table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr 1fr 0.8fr;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--dark-text);
+  color: var(--white);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  border: 2px solid var(--dark-text);
+}
+
+.zone-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr 1fr 0.8fr;
+  gap: 10px;
+  padding: 12px;
+  border: 2px solid var(--dark-text);
+  border-top: none;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.zone-card:hover {
+  filter: brightness(0.95);
+}
+
+.zone-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.zone-card-name {
+  font-weight: 700;
+}
+
+.zone-card-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.zone-card-stats {
+  display: contents;
+}
+
+.zone-stat {
+  display: flex;
+  align-items: center;
+}
+
+.zone-stat-label {
+  display: none;
+}
+
+.zone-stat-value {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   h1 {
@@ -454,6 +527,64 @@ h3 {
 
   .training-zone-grid > div:first-child {
     grid-column: 1 / -1;
+  }
+
+  /* Zone cards - mobile layout */
+  .zone-table-header {
+    display: none;
+  }
+
+  .zone-card {
+    display: block;
+    margin-bottom: 10px;
+    border: 2px solid var(--dark-text);
+    border-left-width: 6px;
+  }
+
+  .zone-card-header {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.15);
+  }
+
+  .zone-card-name {
+    font-size: 1.1rem;
+  }
+
+  .zone-card-label {
+    font-size: 0.8rem;
+  }
+
+  .zone-card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .zone-stat {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .zone-stat-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .zone-stat-value {
+    font-size: 0.9rem;
+  }
+
+  .zone-card-wrapper .zone-description {
+    margin-bottom: 10px;
+    border-left-width: 6px;
   }
 }
 

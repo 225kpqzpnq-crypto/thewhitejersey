@@ -256,48 +256,51 @@ function ZoneCalculator() {
           HR zones (Karvonen) + Power zones (% of 2k watts)
         </p>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Zone</th>
-                <th>Type</th>
-                <th>HR Range</th>
-                <th>Pace</th>
-                <th>Watts</th>
-                <th>Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {zones.map(zone => (
-                <tr
-                  key={zone.id}
-                  className={`zone-${zone.id}`}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedZone(selectedZone === zone.id ? null : zone.id)}
-                >
-                  <td style={{ fontWeight: 700 }}>{zone.name}</td>
-                  <td style={{ fontSize: '0.8rem' }}>{zone.label}</td>
-                  <td>{zone.lowHR}-{zone.highHR}</td>
-                  <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                    {formatPace(zone.slowPace)}-{formatPace(zone.fastPace)}
-                  </td>
-                  <td style={{ fontWeight: 800, whiteSpace: 'nowrap' }}>
-                    {zone.minWatts}-{zone.maxWatts}W
-                  </td>
-                  <td>{zone.rate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {selectedZone && (
-          <div className="zone-description">
-            <strong>{zones[selectedZone - 1].name} - {zones[selectedZone - 1].label}</strong>
-            <p style={{ marginTop: '8px' }}>{zones[selectedZone - 1].description}</p>
+        <div className="zone-table">
+          <div className="zone-table-header">
+            <span>Zone</span>
+            <span>HR Range</span>
+            <span>Pace</span>
+            <span>Watts</span>
+            <span>Rate</span>
           </div>
-        )}
+          {zones.map(zone => (
+            <div key={zone.id} className="zone-card-wrapper">
+              <div
+                className={`zone-card zone-${zone.id}`}
+                onClick={() => setSelectedZone(selectedZone === zone.id ? null : zone.id)}
+              >
+                <div className="zone-card-header">
+                  <span className="zone-card-name">{zone.name}</span>
+                  <span className="zone-card-label">{zone.label}</span>
+                </div>
+                <div className="zone-card-stats">
+                  <div className="zone-stat">
+                    <span className="zone-stat-label">HR</span>
+                    <span className="zone-stat-value">{zone.lowHR}-{zone.highHR}</span>
+                  </div>
+                  <div className="zone-stat">
+                    <span className="zone-stat-label">Pace</span>
+                    <span className="zone-stat-value">{formatPace(zone.slowPace)}-{formatPace(zone.fastPace)}</span>
+                  </div>
+                  <div className="zone-stat">
+                    <span className="zone-stat-label">Watts</span>
+                    <span className="zone-stat-value">{zone.minWatts}-{zone.maxWatts}W</span>
+                  </div>
+                  <div className="zone-stat">
+                    <span className="zone-stat-label">Rate</span>
+                    <span className="zone-stat-value">{zone.rate}</span>
+                  </div>
+                </div>
+              </div>
+              {selectedZone === zone.id && (
+                <div className="zone-description">
+                  <p>{zone.description}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
         <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '10px' }}>
           Click a zone row to see training guidance
