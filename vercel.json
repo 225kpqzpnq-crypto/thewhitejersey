@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/rowing",
+      "destination": "/rowing/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/workout-app",
@@ -15,10 +22,6 @@
     {
       "source": "/zone-calc/:path*",
       "destination": "https://zones-mu.vercel.app/:path*"
-    },
-    {
-      "source": "/rowing",
-      "destination": "https://thewhitejersey-ika2.vercel.app/"
     },
     {
       "source": "/rowing/",
