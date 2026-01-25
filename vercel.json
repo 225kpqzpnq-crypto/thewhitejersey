@@ -18,7 +18,11 @@
     },
     {
       "source": "/rowing",
-      "destination": "https://thewhitejersey-ika2.vercel.app/index.html"
+      "destination": "https://thewhitejersey-ika2.vercel.app/"
+    },
+    {
+      "source": "/rowing/",
+      "destination": "https://thewhitejersey-ika2.vercel.app/"
     },
     {
       "source": "/rowing/:path*",
