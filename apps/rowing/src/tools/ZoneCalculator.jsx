@@ -3,56 +3,56 @@ import { useState, useEffect } from 'react'
 const ZONES = [
   {
     id: 1,
-    name: 'Zone 1',
-    min: 0.50,
-    max: 0.60,
+    name: 'UT2',
+    min: 0.60,
+    max: 0.70,
     powerMin: 0.50,
     powerMax: 0.60,
-    label: 'UT2 - Aerobic Capacity',
+    label: 'Aerobic Capacity',
     rate: '16-18',
-    description: 'Very light effort. Easy conversation pace. Long steady state, 60+ min pieces.'
+    description: 'Light effort. Can hold a conversation. Long steady state, 60+ min pieces.'
   },
   {
     id: 2,
-    name: 'Zone 2',
-    min: 0.60,
-    max: 0.70,
+    name: 'UT1',
+    min: 0.70,
+    max: 0.80,
     powerMin: 0.60,
     powerMax: 0.70,
-    label: 'UT1 - Aerobic Endurance',
+    label: 'Aerobic Endurance',
     rate: '18-22',
-    description: 'Light effort. Can hold a conversation. Moderate steady state, 20-40 min intervals.'
+    description: 'Moderate effort. Comfortably hard. Steady state, 20-40 min intervals.'
   },
   {
     id: 3,
-    name: 'Zone 3',
-    min: 0.70,
-    max: 0.80,
+    name: 'AT',
+    min: 0.80,
+    max: 0.85,
     powerMin: 0.70,
     powerMax: 0.80,
-    label: 'AT - Threshold',
+    label: 'Threshold',
     rate: '24-28',
-    description: 'Moderate effort. Comfortably hard. Threshold work, 8-20 min intervals.'
+    description: 'Hard effort. Threshold work, 8-20 min intervals.'
   },
   {
     id: 4,
-    name: 'Zone 4',
-    min: 0.80,
-    max: 0.90,
+    name: 'TR',
+    min: 0.85,
+    max: 0.95,
     powerMin: 0.80,
     powerMax: 0.90,
-    label: 'TR - Transport/Race',
+    label: 'Transport/Race',
     rate: '26-32',
-    description: 'Hard effort. Race pace for longer pieces. 2-8 min intervals.'
+    description: 'Very hard effort. Race pace for longer pieces. 2-8 min intervals.'
   },
   {
     id: 5,
-    name: 'Zone 5',
-    min: 0.90,
+    name: 'AN',
+    min: 0.95,
     max: 1.00,
     powerMin: 0.95,
     powerMax: 1.10,
-    label: 'AN - Anaerobic',
+    label: 'Anaerobic',
     rate: '32+',
     description: 'Maximum effort. Sprint work only. Short intervals with full recovery.'
   }
