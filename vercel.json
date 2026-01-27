@@ -14,11 +14,11 @@
   "rewrites": [
     {
       "source": "/rowing-checklist/",
-      "destination": "https://rowing-checklist-DEPLOY-URL.vercel.app/"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/"
     },
     {
       "source": "/rowing-checklist/:path*",
-      "destination": "https://rowing-checklist-DEPLOY-URL.vercel.app/:path*"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/"
     },
     {
       "source": "/workout-app",
