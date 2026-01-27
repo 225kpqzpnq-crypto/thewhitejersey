@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocalStorage } from './useLocalStorage'
+import { API_BASE_URL } from '../config'
 
 const STORAGE_KEY = 'rowing-checklist-log'
 const CURRENT_VERSION = 2
@@ -25,7 +26,7 @@ export function useDailyLog() {
       }
 
       try {
-        const response = await fetch(`/api/log/read?userId=${userId}`)
+        const response = await fetch(`${API_BASE_URL}/api/log/read?userId=${userId}`)
         if (response.ok) {
           const data = await response.json()
           if (data.log && Object.keys(data.log).length > 0) {
@@ -87,7 +88,7 @@ export function useDailyLog() {
       setSyncError(null)
 
       try {
-        const response = await fetch('/api/log/write', {
+        const response = await fetch(`${API_BASE_URL}/api/log/write`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, log }),

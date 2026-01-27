@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../components/ThemeProvider'
+import { API_BASE_URL } from '../config'
 
 export default function AuthScreen({ onAuthenticated }) {
   const { dark } = useTheme()
@@ -58,7 +59,7 @@ export default function AuthScreen({ onAuthenticated }) {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin }),
@@ -91,7 +92,7 @@ export default function AuthScreen({ onAuthenticated }) {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin }),
