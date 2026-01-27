@@ -4,9 +4,22 @@
       "source": "/rowing",
       "destination": "/rowing/",
       "permanent": true
+    },
+    {
+      "source": "/rowing-checklist",
+      "destination": "/rowing-checklist/",
+      "permanent": true
     }
   ],
   "rewrites": [
+    {
+      "source": "/rowing-checklist/",
+      "destination": "https://rowing-checklist-DEPLOY-URL.vercel.app/"
+    },
+    {
+      "source": "/rowing-checklist/:path*",
+      "destination": "https://rowing-checklist-DEPLOY-URL.vercel.app/:path*"
+    },
     {
       "source": "/workout-app",
       "destination": "https://workout-app-chi-gray.vercel.app/index.html"
