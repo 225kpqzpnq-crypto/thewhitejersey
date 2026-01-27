@@ -1,9 +1,12 @@
 import { kv } from '@vercel/kv';
-import crypto from 'crypto';
 
-// Hash PIN for secure storage
-function hashPin(pin) {
-  return crypto.createHash('sha256').update(pin).digest('hex');
+// Hash PIN for secure storage using Web Crypto API
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // Generate unique user ID
@@ -34,7 +37,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'PIN must be 4-6 digits' });
     }
 
-    const pinHash = hashPin(pin);
+    const pinHash = await hashPin(pin);
 
     // Check if PIN already exists
     const existingUserId = await kv.get(`pin:${pinHash}`);
@@ -58,6 +61,9 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Register error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error.message
+    });
   }
 }
