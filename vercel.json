@@ -37,20 +37,12 @@
       "destination": "https://zones-mu.vercel.app/:path*"
     },
     {
-      "source": "/api/auth/:path*",
-      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/api/auth/:path*"
-    },
-    {
-      "source": "/api/log/:path*",
-      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/api/log/:path*"
-    },
-    {
       "source": "/rowing/",
-      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/"
+      "destination": "https://thewhitejersey-ika2.vercel.app/"
     },
     {
       "source": "/rowing/:path*",
-      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/:path*"
+      "destination": "https://thewhitejersey-ika2.vercel.app/:path*"
     }
   ]
 }
