@@ -18,7 +18,7 @@
     },
     {
       "source": "/rowing-checklist/:path*",
-      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/:path*"
     },
     {
       "source": "/workout-app",
