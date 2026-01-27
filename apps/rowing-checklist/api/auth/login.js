@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 // Hash PIN for secure storage using Web Crypto API
 async function hashPin(pin) {
@@ -35,7 +37,7 @@ export default async function handler(req, res) {
     const pinHash = await hashPin(pin);
 
     // Look up user by PIN
-    const userId = await kv.get(`pin:${pinHash}`);
+    const userId = await redis.get(`pin:${pinHash}`);
 
     if (!userId) {
       return res.status(401).json({ error: 'Invalid PIN' });

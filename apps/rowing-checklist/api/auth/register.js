@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 // Hash PIN for secure storage using Web Crypto API
 async function hashPin(pin) {
@@ -64,15 +66,15 @@ export default async function handler(req, res) {
     const pinHash = await hashPin(pin);
     console.log('PIN hashed successfully');
 
-    // Check if KV is available
-    if (!kv) {
-      console.error('KV not available');
+    // Check if Redis is available
+    if (!redis) {
+      console.error('Redis not available');
       return res.status(500).json({ error: 'Database not configured' });
     }
 
     console.log('Checking for existing PIN...');
     // Check if PIN already exists
-    const existingUserId = await kv.get(`pin:${pinHash}`);
+    const existingUserId = await redis.get(`pin:${pinHash}`);
     if (existingUserId) {
       console.log('PIN already in use');
       return res.status(409).json({ error: 'PIN already in use. Please choose a different PIN.' });
@@ -85,12 +87,12 @@ export default async function handler(req, res) {
 
     console.log('Storing PIN mapping...');
     // Store PIN -> userId mapping
-    await kv.set(`pin:${pinHash}`, userId);
+    await redis.set(`pin:${pinHash}`, userId);
     console.log('PIN mapping stored');
 
     console.log('Initializing user log...');
     // Initialize empty log for user
-    await kv.set(`user:${userId}:log`, {});
+    await redis.set(`user:${userId}:log`, JSON.stringify({}));
     console.log('User log initialized');
 
     return res.status(201).json({

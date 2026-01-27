@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : null;
 
 export default async function handler(req, res) {
   // CORS headers
@@ -23,15 +25,17 @@ export default async function handler(req, res) {
     }
 
     // Fetch user's log data
-    const log = await kv.get(`user:${userId}:log`);
+    const logData = await redis.get(`user:${userId}:log`);
 
-    if (log === null) {
+    if (logData === null) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const log = logData ? JSON.parse(logData) : {};
+
     return res.status(200).json({
       success: true,
-      log: log || {},
+      log,
     });
   } catch (error) {
     console.error('Read log error:', error);
