@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTheme } from '../components/ThemeProvider'
 import { useDailyLog } from '../hooks/useDailyLog'
+import RowingSessionModal from '../components/RowingSessionModal'
 
 function ProtocolPicker({ type, onSelect, onCancel }) {
   const { dark } = useTheme()
@@ -71,14 +72,20 @@ function ProtocolPicker({ type, onSelect, onCancel }) {
 
 export default function HomePage() {
   const { dark } = useTheme()
-  const { getTodayStatus } = useDailyLog()
+  const { getTodayStatus, saveRowingSession } = useDailyLog()
   const status = getTodayStatus()
   const [picking, setPicking] = useState(null)
+  const [showRowingModal, setShowRowingModal] = useState(false)
   const navigate = useNavigate()
 
   function handleSelect(type) {
     setPicking(null)
     navigate(`/checklist/${type}`)
+  }
+
+  function handleSaveRowing(workoutName, duration, distance, comment) {
+    saveRowingSession(workoutName, duration, distance, comment)
+    setShowRowingModal(false)
   }
 
   return (
@@ -170,6 +177,36 @@ export default function HomePage() {
             )}
           </div>
         </button>
+
+        {/* Rowing Session Card */}
+        <button
+          onClick={() => setShowRowingModal(true)}
+          className={`relative p-6 rounded-2xl text-left border-2 transition-all cursor-pointer ${
+            dark
+              ? 'border-warm-gray-700 bg-warm-gray-800 hover:border-amber-accent/50'
+              : 'border-warm-gray-200 bg-white hover:border-amber-accent/50'
+          }`}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="text-2xl mb-2">🚣</div>
+              <h2
+                className={`text-lg font-semibold mb-1 ${
+                  dark ? 'text-warm-gray-100' : 'text-warm-gray-900'
+                }`}
+              >
+                Log Rowing Session
+              </h2>
+              <p
+                className={`text-sm ${
+                  dark ? 'text-warm-gray-500' : 'text-warm-gray-400'
+                }`}
+              >
+                Track your workout
+              </p>
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* History link */}
@@ -189,6 +226,13 @@ export default function HomePage() {
           type={picking}
           onSelect={handleSelect}
           onCancel={() => setPicking(null)}
+        />
+      )}
+
+      {showRowingModal && (
+        <RowingSessionModal
+          onSave={handleSaveRowing}
+          onClose={() => setShowRowingModal(false)}
         />
       )}
     </div>

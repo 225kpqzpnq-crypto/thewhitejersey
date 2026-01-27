@@ -1,8 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useTheme } from './ThemeProvider'
+import { useDailyLog } from '../hooks/useDailyLog'
+import SyncIndicator from './SyncIndicator'
 
 export default function Layout({ children }) {
   const { dark, toggle } = useTheme()
+  const { syncing, syncError } = useDailyLog()
   const location = useLocation()
   const isHome = location.pathname === '/'
 
@@ -19,14 +22,24 @@ export default function Layout({ children }) {
         </Link>
         <div className="flex items-center gap-3">
           {!isHome && (
-            <Link
-              to="/history"
-              className={`text-sm no-underline ${
-                dark ? 'text-warm-gray-400 hover:text-warm-gray-200' : 'text-warm-gray-500 hover:text-warm-gray-700'
-              }`}
-            >
-              History
-            </Link>
+            <>
+              <Link
+                to="/history"
+                className={`text-sm no-underline ${
+                  dark ? 'text-warm-gray-400 hover:text-warm-gray-200' : 'text-warm-gray-500 hover:text-warm-gray-700'
+                }`}
+              >
+                History
+              </Link>
+              <Link
+                to="/settings"
+                className={`text-sm no-underline ${
+                  dark ? 'text-warm-gray-400 hover:text-warm-gray-200' : 'text-warm-gray-500 hover:text-warm-gray-700'
+                }`}
+              >
+                Settings
+              </Link>
+            </>
           )}
           <button
             onClick={toggle}
@@ -42,6 +55,7 @@ export default function Layout({ children }) {
         </div>
       </header>
       <main>{children}</main>
+      <SyncIndicator syncing={syncing} syncError={syncError} />
     </div>
   )
 }

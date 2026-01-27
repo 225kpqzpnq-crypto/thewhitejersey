@@ -1,14 +1,22 @@
 import { useTheme } from './ThemeProvider'
 
-const messages = {
+const completeMessages = {
   pre: { heading: 'Warm-Up Complete', sub: 'Ready to Row!' },
   post: { heading: 'Recovery Complete', sub: 'Well Done!' },
   mvpPre: { heading: 'Quick Warm-Up Done', sub: 'Ready to Row!' },
   mvpPost: { heading: 'Quick Recovery Done', sub: 'Well Done!' },
 }
 
-export default function CompletionModal({ type, onClose, onGoHome }) {
+const incompleteMessages = {
+  pre: { heading: 'Progress Saved', sub: 'Continue when ready' },
+  post: { heading: 'Progress Saved', sub: 'Continue when ready' },
+  mvpPre: { heading: 'Progress Saved', sub: 'Continue when ready' },
+  mvpPost: { heading: 'Progress Saved', sub: 'Continue when ready' },
+}
+
+export default function CompletionModal({ type, onClose, onGoHome, isComplete = true }) {
   const { dark } = useTheme()
+  const messages = isComplete ? completeMessages : incompleteMessages
   const msg = messages[type] || messages.pre
 
   return (
@@ -25,18 +33,20 @@ export default function CompletionModal({ type, onClose, onGoHome }) {
           dark ? 'bg-warm-gray-800' : 'bg-white'
         }`}
       >
-        {/* Confetti dots */}
-        <div className="absolute inset-x-0 top-4 flex justify-center gap-3 pointer-events-none">
-          {['🎉', '💪', '🚣', '✨', '🔥'].map((emoji, i) => (
-            <span
-              key={i}
-              className="confetti text-2xl"
-              style={{ animationDelay: `${i * 0.15}s` }}
-            >
-              {emoji}
-            </span>
-          ))}
-        </div>
+        {/* Confetti dots - only show for complete sessions */}
+        {isComplete && (
+          <div className="absolute inset-x-0 top-4 flex justify-center gap-3 pointer-events-none">
+            {['🎉', '💪', '🚣', '✨', '🔥'].map((emoji, i) => (
+              <span
+                key={i}
+                className="confetti text-2xl"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              >
+                {emoji}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-12 mb-6">
           <h2

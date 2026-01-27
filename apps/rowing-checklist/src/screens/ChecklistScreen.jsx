@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { checklists } from '../data/checklists'
 import { useChecklist } from '../hooks/useChecklist'
@@ -7,6 +7,7 @@ import { useTheme } from '../components/ThemeProvider'
 import ChecklistSection from '../components/ChecklistSection'
 import ProgressBar from '../components/ProgressBar'
 import CompletionModal from '../components/CompletionModal'
+import IncompleteModal from '../components/IncompleteModal'
 
 export default function ChecklistScreen() {
   const { type } = useParams()
@@ -17,16 +18,24 @@ export default function ChecklistScreen() {
     useChecklist(type)
   const { saveSession } = useDailyLog()
   const [showModal, setShowModal] = useState(false)
-  const savedRef = useRef(false)
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false)
 
-  useEffect(() => {
-    if (isComplete && !savedRef.current) {
-      savedRef.current = true
-      const protocol = type.startsWith('mvp') ? 'mvp' : 'full'
-      saveSession(type, protocol, checked, totalRequired)
+  const handleDone = () => {
+    const protocol = type.startsWith('mvp') ? 'mvp' : 'full'
+    if (isComplete) {
+      saveSession(type, protocol, checked, totalRequired, true)
       setShowModal(true)
+    } else {
+      setShowIncompleteModal(true)
     }
-  }, [isComplete, type, checked, totalRequired, saveSession])
+  }
+
+  const handleConfirmIncomplete = () => {
+    const protocol = type.startsWith('mvp') ? 'mvp' : 'full'
+    saveSession(type, protocol, checked, totalRequired, false)
+    setShowIncompleteModal(false)
+    setShowModal(true)
+  }
 
   if (!checklist) {
     return (
@@ -74,11 +83,31 @@ export default function ChecklistScreen() {
         />
       ))}
 
+      {/* Floating Action Button */}
+      <button
+        onClick={handleDone}
+        className="fixed bottom-6 right-6 z-10 px-6 py-3 bg-amber-accent text-white font-semibold rounded-xl shadow-lg hover:bg-amber-dark transition-all cursor-pointer border-0 hover:scale-105"
+      >
+        I'm Done ✓
+      </button>
+
       {showModal && (
         <CompletionModal
           type={type}
           onClose={() => setShowModal(false)}
           onGoHome={() => navigate('/')}
+          isComplete={isComplete}
+        />
+      )}
+
+      {showIncompleteModal && (
+        <IncompleteModal
+          type={type}
+          checkedCount={checkedCount}
+          totalRequired={totalRequired}
+          progress={progress}
+          onConfirm={handleConfirmIncomplete}
+          onCancel={() => setShowIncompleteModal(false)}
         />
       )}
     </div>

@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTheme } from '../components/ThemeProvider'
 import { useDailyLog } from '../hooks/useDailyLog'
 import CalendarGrid from '../components/CalendarGrid'
 import DayDetail from '../components/DayDetail'
+import StatsSection from '../components/StatsSection'
+import {
+  calculateWeekStats,
+  calculateMonthStats,
+  calculateAllTimeStats,
+  getISOWeek,
+  getISOWeekYear,
+} from '../utils/stats'
 
 export default function HistoryScreen() {
   const { dark } = useTheme()
@@ -14,6 +22,20 @@ export default function HistoryScreen() {
   const [selectedDay, setSelectedDay] = useState(
     now.toISOString().slice(0, 10),
   )
+  const [statsPeriod, setStatsPeriod] = useState('week')
+
+  // Calculate stats based on selected period
+  const stats = useMemo(() => {
+    if (statsPeriod === 'week') {
+      const weekYear = getISOWeekYear(now)
+      const weekNumber = getISOWeek(now)
+      return calculateWeekStats(log, weekYear, weekNumber)
+    } else if (statsPeriod === 'month') {
+      return calculateMonthStats(log, now.getFullYear(), now.getMonth())
+    } else {
+      return calculateAllTimeStats(log)
+    }
+  }, [log, statsPeriod, now])
 
   function prevMonth() {
     if (month === 0) {
@@ -47,6 +69,13 @@ export default function HistoryScreen() {
       >
         History
       </h1>
+
+      {/* Stats Section */}
+      <StatsSection
+        period={statsPeriod}
+        stats={stats}
+        onPeriodChange={setStatsPeriod}
+      />
 
       {/* Month navigation */}
       <div className="flex items-center justify-between mb-4">
@@ -91,6 +120,12 @@ export default function HistoryScreen() {
           <div className="w-2 h-2 rounded-full bg-post-green" />
           <span className={`text-xs ${dark ? 'text-warm-gray-500' : 'text-warm-gray-400'}`}>
             Post-Rowing
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-amber-accent" />
+          <span className={`text-xs ${dark ? 'text-warm-gray-500' : 'text-warm-gray-400'}`}>
+            Rowing
           </span>
         </div>
       </div>

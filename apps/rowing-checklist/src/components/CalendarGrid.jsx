@@ -19,12 +19,14 @@ export default function CalendarGrid({ year, month, log, selectedDay, onSelectDa
     for (let d = 1; d <= daysInMonth; d++) {
       const key = `${year}-${pad(month + 1)}-${pad(d)}`
       const dayData = log[key]
-      const types = dayData ? dayData.sessions.map((s) => s.type) : []
+      const sessions = dayData?.sessions || []
+      const types = sessions.map((s) => s.type)
       days.push({
         day: d,
         key,
         hasPre: types.some((t) => t === 'pre' || t === 'mvpPre'),
         hasPost: types.some((t) => t === 'post' || t === 'mvpPost'),
+        hasRowing: sessions.some((s) => (s.sessionType || 'checklist') === 'rowing'),
       })
     }
     return { days, firstDayOffset: offset }
@@ -53,7 +55,7 @@ export default function CalendarGrid({ year, month, log, selectedDay, onSelectDa
         {Array.from({ length: firstDayOffset }).map((_, i) => (
           <div key={`empty-${i}`} />
         ))}
-        {days.map(({ day, key, hasPre, hasPost }) => {
+        {days.map(({ day, key, hasPre, hasPost, hasRowing }) => {
           const isToday = key === today
           const isSelected = key === selectedDay
 
@@ -74,13 +76,16 @@ export default function CalendarGrid({ year, month, log, selectedDay, onSelectDa
               }`}
             >
               <span>{day}</span>
-              {(hasPre || hasPost) && (
+              {(hasPre || hasPost || hasRowing) && (
                 <div className="flex gap-0.5 mt-0.5">
                   {hasPre && (
                     <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/70' : 'bg-pre-blue'}`} />
                   )}
                   {hasPost && (
                     <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/70' : 'bg-post-green'}`} />
+                  )}
+                  {hasRowing && (
+                    <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/70' : 'bg-amber-accent'}`} />
                   )}
                 </div>
               )}
