@@ -38,11 +38,11 @@
     },
     {
       "source": "/api/auth/:path*",
-      "destination": "https://thewhitejersey-ika2.vercel.app/api/auth/:path*"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/api/auth/:path*"
     },
     {
       "source": "/api/log/:path*",
-      "destination": "https://thewhitejersey-ika2.vercel.app/api/log/:path*"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/api/log/:path*"
     },
     {
       "source": "/rowing/",
