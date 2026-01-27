@@ -46,11 +46,11 @@
     },
     {
       "source": "/rowing/",
-      "destination": "https://thewhitejersey-ika2.vercel.app/"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/"
     },
     {
       "source": "/rowing/:path*",
-      "destination": "https://thewhitejersey-ika2.vercel.app/:path*"
+      "destination": "https://thewhitejersey-rowing-checklist.vercel.app/:path*"
     }
   ]
 }
