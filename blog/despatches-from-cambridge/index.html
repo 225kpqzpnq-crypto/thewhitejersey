@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despatches from Cambridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background-color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #000;
+            font-weight: bold;
+            letter-spacing: -1px;
+        }
+
+        .content p {
+            margin-bottom: 1.8em;
+            font-size: 1.1em;
+            line-height: 1.9;
+            color: #333;
+        }
+
+        .content ul {
+            margin: 40px 0;
+            padding-left: 20px;
+            list-style: none;
+        }
+
+        .content li {
+            margin-bottom: 20px;
+            font-size: 1.05em;
+            line-height: 1.8;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .content li:before {
+            content: "—";
+            position: absolute;
+            left: 0;
+        }
+
+        .image-gallery {
+            margin: 60px 0 0 0;
+            padding-top: 60px;
+            border-top: 1px solid #ddd;
+        }
+
+        .image-gallery img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-gallery img:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 2.2em;
+            }
+
+            .content p, .content li {
+                font-size: 1em;
+            }
+        }
+
+        /* Lightbox styles */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Despatches from Cambridge</h1>
+        </header>
+
+        <div class="content">
+            <p>Since arriving in Cambridge, in mid-September I have done a terrible job at keeping in touch with people at home, and for that I apologise. What I am going to try and do here is hopefully make up partially for that and try to give some insight into what the experience has been like which may help to make up for it.</p>
+
+            <p>As of this week, I have now lived in the UK for six months and experienced good weather for about the sum total of five days. I know I'm not allowed to complain about the weather as it's my own fault and as I've been forced to remind myself no one moves to England for the weather and don't get me started on the December dark. Despite that, and even if I moved back to Melbourne tomorrow, there is no life decision that could have been better than the one that I made to come here. These six months have felt transformative in terms of the person I am and I feel incredibly fortunate to have made such a deep group of friends, bonded over Guinness and complaining about what is in all fairness a modest amount of university work, that we all willingly and fully informed signed up for.</p>
+
+            <p>The list of highlights since I have been here has been countless but some that deserve mentioning include:</p>
+
+            <ul>
+                <li>Spending my first day at a Millwall game directly behind the goals where I heard an uncle teach his eight-year old nephew how to yell profanities to both the goalkeeper and the referees as an introduction to English culture</li>
+                <li>A manic two weeks in London, where I was able to catch up with the half of Melbourne that has moved to London and decided to live in North Fitzroy North (Islington)</li>
+                <li>Being dropped off by my aunt, as if it was my first day of school at Cambridge, where I initially knew no one, but by the end of the first day, already had a group of ten friends</li>
+                <li>Attending the horse races for the first time, where the main expense wasn't my gambling losses (I broke even) but was getting roped into buying a 1% stake in race horse called Zooter</li>
+                <li>The day after the races, catastrophically hungover, competing in a charity running relay through the streets of Cambridge on a perfect day running down Kings Parade with the church bells in the background</li>
+                <li>Finding myself part of a disjointed and at times chaotic Cambridge MBA family and being adopted into American traditions (Sweet potato and marshmallow is a travesty though)</li>
+                <li>Going to countless formal hall and black tie events, always with great people, overcooked chicken and generally average wine</li>
+                <li>Having the pleasure of hosting some of my best friends from all over the world in Cambridge when they pass through the UK</li>
+                <li>Drinking Beaujolais Nouveau on a freezing street in London in November</li>
+                <li>Celebrating Christmas with a perfect leg of roast lamb and a motley crew of orphans</li>
+                <li>Balancing the exorbitant number of Guinness consumed, with early mornings with the St Catharine's College (Catz) Boat Club and immediately becoming obsessed with the sport, in a way that is totally unjustified by my talent with a blade</li>
+                <li>Having the arrogance to go skiing for the first time, without any lessons, and making it stick through the first four days, before like Icarus it all came crashing down</li>
+                <li>Trips to London to escape the craziness of Cambridge before the horror of the 11:31 Kings Cross to Cambridge</li>
+                <li>Cosplaying an Arsenal supporter and witnessing a 95th minute winner</li>
+                <li>Escaping the winter of Cambridge with five days in the sun of Morocco, and eating my body weight in Tagine</li>
+                <li>Going to Dublin for the races before they were cancelled, so instead consumed by bodyweight in Guinness</li>
+                <li>Constantly scheming trips for the spring and summer, while recognising that day by day, week by week, what feels like an endless holiday comes to an end</li>
+                <li>Being a student again, asking questions, being curious, being wrong, learning from those around me</li>
+                <li>Wednesday afternoon pints, because we all understand that we only have one year, so we need to make the most of it</li>
+                <li>Realising that there is no better weather in the world than a 14 degree and sunny day in England in February, sitting by the river at the Plough, watching rowers go by</li>
+            </ul>
+
+            <p>Amongst all the fun times though, there have been moments of loneliness, frustration and sadness. I miss my family, my friends at home and the place I grew up. I was expecting that after time here, England would once again feel like home, but that hasn't been the case at all. It is something different, but exciting, a place where I am able to be the most authentic and eccentric version of myself. The great strength of doing this degree and being here, is that everyone is here because they want to be somewhere else, maybe not forever, but for now. In our late twenties we all recognise the finality of this moment and that once we return to work in September it's all over. Despite that, I'm not sad that in six months, this dream state will come to an end. The deadline of September 12, is the best possible motivator to make every day count and to never say no when a friend suggests a trip, a beer or an investment in a race horse.</p>
+
+            <p>So what do the next six months and beyond mean for me? I have absolutely no idea, but I do know for certain, I'm not going to be bored.</p>
+        </div>
+
+        <footer>
+            <p>Don't be a stranger.</p>
+        </footer>
+
+        <div class="image-gallery">
+            <img src="7C397A22-C0AB-4DAE-BC1D-1D49F97D69F1_1_105_c.jpeg" alt="Cambridge">
+            <img src="2DCBE52B-2E3F-4184-811D-02D3DCB7621A_1_201_a.jpeg" alt="Cambridge">
+            <img src="815BE069-E73E-4579-AC58-4DFD62E59D5F_1_105_c.jpeg" alt="Cambridge">
+            <img src="00AE30B5-F8BA-40BE-B5EB-50AE9DA77C09_1_105_c.jpeg" alt="Cambridge">
+            <img src="122A4405-83B3-493B-A844-A26D2221318B_1_105_c.jpeg" alt="Cambridge">
+            <img src="02A2D19B-E0B8-4D7C-81AD-AF58AB8C52CA_1_105_c.jpeg" alt="Cambridge">
+            <img src="3B9EF867-B3EE-4DD8-99F0-798EE50051A8_1_105_c.jpeg" alt="Cambridge">
+            <img src="58B4CA17-B26D-403A-A61F-AADB8E8131EF_1_105_c.jpeg" alt="Cambridge">
+            <img src="61CA56FA-48EE-4C25-A4C5-F221ABCE672F_1_105_c.jpeg" alt="Cambridge">
+            <img src="6F55679C-F98D-48D6-B89D-700591B8BE5C_1_105_c.jpeg" alt="Cambridge">
+            <img src="695A660F-2623-400D-993A-93EE8D58FF9D_1_105_c.jpeg" alt="Cambridge">
+            <img src="75143A52-3667-4D0E-B4A4-5F9B5DFD3E7F_1_105_c.jpeg" alt="Cambridge">
+            <img src="7E3579CD-49AA-407E-81D5-88A2D25808F5_1_105_c.jpeg" alt="Cambridge">
+            <img src="8BEAA529-4001-425D-AD8F-88D109BA0A94_1_105_c.jpeg" alt="Cambridge">
+            <img src="9612CB35-0B33-4D82-B939-014F9E82B159_1_105_c.jpeg" alt="Cambridge">
+            <img src="B0E3E9AB-327F-4F9D-82F0-F2BB3412BD91_1_105_c.jpeg" alt="Cambridge">
+            <img src="BF9720C9-86FF-4BEE-BE4C-E78147518EC0_1_105_c.jpeg" alt="Cambridge">
+            <img src="D8E1B730-316E-4386-AA11-32202AD57160_1_105_c.jpeg" alt="Cambridge">
+            <img src="DD67AAEB-C8CB-4118-8E94-A18ACA469640_1_105_c.jpeg" alt="Cambridge">
+            <img src="F3E52680-B151-4250-9BE1-04BF7E07C458_1_105_c.jpeg" alt="Cambridge">
+            <img src="F8D20B4E-6766-4A25-A071-851361CD343E_1_105_c.jpeg" alt="Cambridge">
+            <img src="F92E97E5-9679-49CC-979D-81C6BBB9B5D2_1_105_c.jpeg" alt="Cambridge">
+            <img src="2A690500-0A29-44E6-9207-B7A14CF5891E.jpeg" alt="Cambridge">
+            <img src="2D08B913-25BD-4BD0-B5F4-A04D10B13424_1_201_a.jpeg" alt="Cambridge">
+            <img src="68E173B5-EFD1-493F-BC1C-6AB22ACA33AE.jpeg" alt="Cambridge">
+            <img src="76F3CD21-A922-4EC5-8422-0C0F13F68702_1_201_a.jpeg" alt="Cambridge">
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <script>
+        // Add click event to all images in gallery for lightbox
+        document.querySelectorAll('.image-gallery img').forEach(img => {
+            img.addEventListener('click', function() {
+                document.getElementById('lightbox').classList.add('active');
+                document.getElementById('lightbox-img').src = this.src;
+            });
+        });
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        // Close lightbox on background click
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    </script>
+</body>
+</html>
