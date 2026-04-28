@@ -9,6 +9,21 @@
       "source": "/rowing-checklist",
       "destination": "/rowing-checklist/",
       "permanent": true
+    },
+    {
+      "source": "/blog/changing-of-seasons",
+      "destination": "/blog/Changing-of-seasons/",
+      "permanent": true
+    },
+    {
+      "source": "/blog/changing-of-seasons/",
+      "destination": "/blog/Changing-of-seasons/",
+      "permanent": true
+    },
+    {
+      "source": "/blog/despatches-from-cambridge",
+      "destination": "/blog/despatches-from-cambridge/",
+      "permanent": true
     }
   ],
   "rewrites": [
