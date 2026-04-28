@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changing of seasons</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background-color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #000;
+            font-weight: bold;
+            letter-spacing: -1px;
+        }
+
+        .date {
+            color: #666;
+            font-size: 0.95em;
+            margin-top: 10px;
+        }
+
+        .content p {
+            margin-bottom: 1.8em;
+            font-size: 1.1em;
+            line-height: 1.9;
+            color: #333;
+        }
+
+        .content ul {
+            margin: 40px 0;
+            padding-left: 20px;
+            list-style: none;
+        }
+
+        .content li {
+            margin-bottom: 20px;
+            font-size: 1.05em;
+            line-height: 1.8;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .content li:before {
+            content: "—";
+            position: absolute;
+            left: 0;
+        }
+
+        .image-gallery {
+            margin: 60px 0 0 0;
+            padding-top: 60px;
+            border-top: 1px solid #ddd;
+        }
+
+        .image-gallery img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-gallery img:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 2.2em;
+            }
+
+            .content p, .content li {
+                font-size: 1em;
+            }
+        }
+
+        /* Lightbox styles */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Changing of seasons</h1>
+            <p class="date">28 April 2026</p>
+        </header>
+
+        <div class="content">
+            <p>There was a period in mid-January where I became increasingly convinced that the sun hadn't merely disappeared for winter but was gone for good. In February, I wrote about how the year had absolutely flown by with barely a chance to notice time passing.</p>
+
+            <p>Writing that post was a useful activity to realise how much had actually happened since arriving in Cambridge. Two months later, the sun has returned, the pollen count has climbed and while the rest of the university prepares for a period of intense focus for their exam period, my MBA comrades and I have emerged from hibernation.</p>
+
+            <p>Some highlights from Spring:</p>
+
+            <ul>
+                <li>The feeling while rowing with the Catz crew of the boat actually moving with the water on occasions, rather than in a constant battle with it</li>
+                <li>The jubilation of winning our first day of Lent Bumps, and overtaking the crew in front of us, before rowing back to the boathouse singing Jerusalem (ok maybe this was just me singing)</li>
+                <li>Cheering on friends at the end of the Cambridge half-marathon before spending the afternoon at the pub singing with the locals</li>
+                <li>Recovering from my skiing-induced shoulder injury, and having a fortnightly movie club with my physio as I went through the rehab process</li>
+                <li>Runs to Grantchester Meadows and through the Backs of Cambridge where each week you could see Spring fighting to come to life and winning week-by-week</li>
+                <li>The beef brisket noodles at Two Treasure - preferably consumed in their Yurt</li>
+                <li>A four day trip to Ireland to watch the six nations, celebrate St Patrick's Day in Dublin and begin our consulting project for World Rugby (not much work was done)</li>
+                <li>Irish beers that aren't Guinness</li>
+                <li>Spending two days in Paris with a friend from home with the feeling that no time had passed at all</li>
+                <li>A croque monsieur and a glass of white Burgundy</li>
+                <li>Cold beer and Pringles on the Eurostar</li>
+                <li>The World Rugby group project study trip to Mallorca becoming a free-for-all with 27 friends from the course colonising three villas in Pollenca</li>
+                <li>Walking through the vineyards at Son Brull Hotel, following a perfect boozy lunch</li>
+                <li>Getting back on the road bike and enjoying the bliss of a 30 minute climb</li>
+                <li>Attending the Boat Race and cheering on a fellow MBA who was racing in the Blue Boat</li>
+                <li>Riding through London on Lime bikes</li>
+                <li>Teaching the Americans how to kick a footy (they are already better at it than me)</li>
+                <li>The pleasure of meeting friends' parents as they come through Cambridge</li>
+                <li>The sun making everything better (picnics, beers and coffees)</li>
+                <li>Enjoying being in the classroom where I can still ask dumb questions</li>
+                <li>Spending far too much time trying to understand how to use Claude Code</li>
+                <li>Finally investing in some decent kitchen equipment and cooking again</li>
+                <li>Beginning to plan out what a London flat may look like</li>
+                <li>Visiting our sister college at the other place, and feeling happy that I ended up in Cambridge</li>
+                <li>Going to my favourite local, the Free Press, twice in the same day and having their scotch egg both times with no regrets</li>
+                <li>Finding a lost tortoise at the Green Dragon</li>
+                <li>Having some very patient friends try (unsuccessfully so far) to teach me how to swing a golf club</li>
+                <li>The cows returning to central Cambridge</li>
+                <li>Monday evening 2 for 1 pizza and Star Wars evenings</li>
+                <li>Pimms</li>
+            </ul>
+
+            <p>And now? A trip to the US to see some old friends, five more weeks of study, lots of rowing and spending as much time as possible with friends in the sun.</p>
+        </div>
+
+        <footer>
+            <p>Don't be a stranger.</p>
+        </footer>
+
+        <div class="image-gallery">
+            <img src="/blog/Changing-of-seasons/12F47B5B-D023-4058-B5E0-403CD1EA5530_1_102_o.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/18E4E80B-D80F-4A73-A588-FABFFB761F0F_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/2B886A5F-A03B-4CAD-9B77-3B4CA28AB573_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/33418872-469E-4C86-A0D1-762F82EAB79B_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/371CB641-09D0-4E24-90D4-19A50D7D8C63_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/46463A65-3AF7-4CBD-84CD-D0024009BD30_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/477F9664-4D44-41E8-B247-F0FA05984ED3_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/493CA8D8-F103-47AD-9BEB-8B668BF66E24_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/4A2D0442-1DFF-47AB-AAAA-4FAC3C6C4051_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/51AD65B8-917A-41B7-B32D-2D08564FE217_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/53F85F64-5BFB-407F-8B70-4B32490F3DC5_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/54284FC8-1950-4220-9BDF-5BD5E0C55C8F_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/7349A909-0FD7-4593-872A-E7902D7F445D_1_102_o.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/8386594A-943A-4B6C-A832-038859609E8A_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/A7953F66-F4D4-4EE9-8468-CA92616DC87E.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/AEB81E44-1785-4B1D-9452-C9C04BCC8817_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/C4C28337-7295-4684-8BA2-72DE5E3550B3_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/C8B1113B-1CAC-40BD-94B1-796B4D9F7C25_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/DCBF09F9-950B-4C0D-959C-4731537F5DC6_1_105_c.jpeg" alt="Changing of seasons">
+            <img src="/blog/Changing-of-seasons/DF2949A5-8E28-4B21-BA38-310F87A42818_1_105_c.jpeg" alt="Changing of seasons">
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <script>
+        document.querySelectorAll('.image-gallery img').forEach(img => {
+            img.addEventListener('click', function() {
+                document.getElementById('lightbox').classList.add('active');
+                document.getElementById('lightbox-img').src = this.src;
+            });
+        });
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+    </script>
+</body>
+</html>
