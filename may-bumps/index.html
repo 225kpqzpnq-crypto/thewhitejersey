@@ -865,18 +865,20 @@ function renderDayCol(divIdx, day, di) {
     const mainBd = bdg ? `<span class="crew-bdg ${bdc}">${bdg}</span>` : '';
     const catzBd = (isCatz && !bdg) ? `<span class="crew-bdg badge-catz">⭐</span>` : '';
 
+    const ft = getFormTime(crew);
+    const isEst = FORM_SRC[crew];
     let formBd = '';
     if (showFormTimes) {
-      const ft = getFormTime(crew);
-      const isEst = FORM_SRC[crew];
       if (ft !== null) {
         formBd = `<span class="crew-bdg badge-form" style="font-size:.55rem">${fmtSec(ft)}${isEst?'*':''}</span>`;
       } else {
         formBd = `<span class="crew-bdg" style="background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.55rem">—</span>`;
       }
+    } else if (ft === null) {
+      formBd = `<span class="crew-bdg" style="background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.52rem;font-weight:400;font-style:italic;border:1px solid var(--border)">no data</span>`;
     }
 
-    html += `<div class="${rc}" ${clickH}><span class="crew-pos">${i+1}</span><span class="crew-name">${crew}${swTag}</span>${mainBd}${catzBd}${formBd}</div>`;
+    html += `<div class="${rc}" ${clickH}><span class="crew-pos">${i+1}</span><span class="crew-name" style="${ft===null?'opacity:.6':''}">${crew}${swTag}</span>${mainBd}${catzBd}${formBd}</div>`;
   }
 
   html += `</div></div>`;
