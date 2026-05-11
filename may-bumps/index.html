@@ -192,6 +192,9 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .threat-high{background:rgba(248,113,113,.2);color:var(--red)}
 .threat-med{background:rgba(251,191,36,.15);color:var(--yellow)}
 .threat-low{background:rgba(52,211,153,.1);color:var(--green)}
+.fg-table tr.no-form-row td{opacity:.4}
+.fg-table tr.no-form-row:hover td{opacity:.65}
+.no-form-badge{font-size:.58rem;color:var(--text-dim);padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-style:italic;white-space:nowrap}
 .fg-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:var(--text-dim);margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
 .fg-legend span{display:flex;align-items:center;gap:4px}
 .nav-tab{padding:6px 14px;border-radius:6px;border:1px solid var(--border);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
@@ -634,6 +637,7 @@ function renderFormGuidePage() {
     <span><span style="color:var(--green)">■</span> faster than Catz</span>
     <span><span style="color:var(--red)">■</span> slower than Catz</span>
     <span>Δ = seconds vs Catz (positive = crew faster)</span>
+    <span style="opacity:.55">&#9632; dimmed = no race data, bump probability is a position-based guess</span>
   </div>`;
 
   for (let d = 0; d < 3; d++) {
@@ -677,13 +681,15 @@ function renderFormGuidePage() {
       }
 
       // Source indicator
-      const src = (row.radTime || row.h2hTime)
+      const hasAnyData = row.radTime !== null || row.h2hTime !== null;
+      const src = hasAnyData
         ? [row.radTime ? 'R' : '', row.h2hTime ? 'H' : ''].filter(Boolean).join('+')
         : '—';
+      const noFormBadge = !hasAnyData ? ' <span class="no-form-badge">no data</span>' : '';
 
-      html += `<tr class="${isCatz ? 'catz-row' : ''}">
+      html += `<tr class="${isCatz ? 'catz-row' : ''} ${hasAnyData ? '' : 'no-form-row'}">
         <td class="fg-pos">${row.pos}</td>
-        <td class="fg-crew ${isCatz ? 'cn' : ''}">${row.crew}${threatBadge ? ' ' + threatBadge : ''}</td>
+        <td class="fg-crew ${isCatz ? 'cn' : ''}">${row.crew}${noFormBadge}${threatBadge ? ' ' + threatBadge : ''}</td>
         <td class="fg-time ${radStr ? deltaClass(radDelta) : 'fg-none'}">${radStr ?? '—'}</td>
         ${showDelta ? `<td class="fg-delta ${deltaClass(radDelta)}">${showDelta ? deltaStr(radDelta) : ''}</td>` : ''}
         <td class="fg-time ${h2hStr ? deltaClass(h2hDelta) : 'fg-none'}">${h2hStr ?? '—'}</td>
