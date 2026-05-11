@@ -447,6 +447,8 @@ function simulateDay(divisions) {
 }
 
 function simulateDayForm(divisions) {
+  // Deterministic: bump iff both crews have form data and chaser is faster.
+  // No form data on either side → row over. No overbumps (too speculative).
   const divs  = divisions.map(d => [...d]);
   const done  = new Set();
   const bumps = [];
@@ -458,37 +460,22 @@ function simulateDayForm(divisions) {
       const ck = `${d}:${chaser}`, pk = `${d}:${prey}`;
       if (done.has(ck) || done.has(pk)) continue;
       const ct = getFormTime(chaser), pt = getFormTime(prey);
-      const prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : bumpProbability(1);
-      if (Math.random() < prob) {
+      if (ct !== null && pt !== null && ct < pt) {
         done.add(ck); done.add(pk);
         div.splice(i, 1); div.splice(i - 1, 0, chaser);
         bumps.push({bumper:chaser, bumped:prey, divIdx:d, overbump:false, sandwich:false});
-        if (i + 1 < div.length && i >= 2) {
-          const oc = div[i+1], ot = div[i-2];
-          const ock = `${d}:${oc}`, otk = `${d}:${ot}`;
-          if (!done.has(ock) && !done.has(otk)) {
-            const oct = getFormTime(oc), ott = getFormTime(ot);
-            const obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : bumpProbability(1) * 0.65;
-            if (Math.random() < obp) {
-              done.add(ock); done.add(otk);
-              const ocPos = div.indexOf(oc); div.splice(ocPos, 1);
-              const otPos = div.indexOf(ot); div.splice(otPos, 0, oc);
-              bumps.push({bumper:oc, bumped:ot, divIdx:d, overbump:true, sandwich:false});
-            }
-          }
-        }
       }
     }
   }
 
+  // Sandwich: only if both have form data and top of lower div is faster
   for (let d = 0; d < 2; d++) {
     const upper = divs[d], lower = divs[d+1];
     const bot = upper[upper.length-1], top = lower[0];
     const bk = `${d}:${bot}`, tk = `${d+1}:${top}`;
     if (!done.has(bk) && !done.has(tk)) {
       const bt = getFormTime(bot), tt = getFormTime(top);
-      const prob = (bt !== null && tt !== null) ? formBumpProb(tt, bt) * 0.6 : bumpProbability(1) * 0.6;
-      if (Math.random() < prob) {
+      if (bt !== null && tt !== null && tt < bt) {
         done.add(bk); done.add(tk);
         upper[upper.length-1] = top; lower[0] = bot;
         bumps.push({bumper:top, bumped:bot, divIdx:d, overbump:false, sandwich:true});
