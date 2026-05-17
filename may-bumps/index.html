@@ -245,11 +245,13 @@ const HDR_H = 52;
 const CON_W = 22;
 
 // ── Form benchmark data ──────────────────────────────────────────────────────
-// Source: Radegund Mile 2026 (2000m) and Spring Head 2 Head 3 May 2026 (~3000m).
+// Sources: Radegund Mile 2026 (2000m), Spring Head 2 Head 3 May 2026 (~3000m),
+//          and Champs VIII Head 2026.
 // All values are H2H-equivalent seconds.
 //   Primary:   actual H2H time (marked H)
 //   Estimated: RAD Mile × 2.04 conversion factor (marked R; calibrated on 6 crews with both)
-// null = no race data; those matchups fall back to position-based probability.
+//              Champs VIII Head × 2.35 conversion factor (marked C; calibrated on 8 crews with both)
+// Crews without data fall back to position-based probability (~35% adjacent pair).
 const FORM_TIMES = {
   // Division 1
   "Lady Margaret":     777.3,  // H  12:57.3
@@ -258,10 +260,12 @@ const FORM_TIMES = {
   "Magdalene":         853.0,  // H  14:13.0
   "Downing":           834.7,  // H  13:54.7
   "Pembroke":          809.6,  // H  13:29.6
+  "St. Catharine's":   844.4,  // C  Champs 5:59.0
+  "Queens'":           816.2,  // C  Champs 5:47.0  (updated from RAD 6:48.69×2.04)
   "Lady Margaret II":  872.5,  // H  14:32.5
   "Clare":             816.8,  // H  13:36.8
   "Fitzwilliam":       818.8,  // H  13:38.8
-  "Queens'":           833.7,  // R  RAD 6:48.69
+  "Robinson":          827.9,  // C  Champs 5:52.0
   // Division 2
   "Trinity Hall":      801.1,  // H  13:21.1
   "Caius II":          812.0,  // H  13:32.0
@@ -269,13 +273,14 @@ const FORM_TIMES = {
   "Christ's":          847.6,  // H  14:07.6
   "Corpus Christi":    850.2,  // H  14:10.2
   "Emmanuel II":       856.0,  // H  14:16.0
+  "Pembroke II":       860.9,  // C  Champs 6:06.0
   "Darwin":            862.1,  // R  RAD 7:02.58
   "Girton":            870.1,  // R  RAD 7:06.52 (H2H DNF)
   "Sidney Sussex":     870.9,  // R  RAD 7:06.93
   // Division 3
   "Trinity Hall II":   841.4,  // H  14:01.4  ← 10 below Catz, fastest Div 3 boat
   "Emmanuel III":      861.5,  // H  14:21.5
-  "Queens' II":        862.4,  // R  RAD 7:02.75
+  "Queens' II":        851.5,  // C  Champs 6:02.0  (updated from RAD 7:02.75×2.04)
   "Churchill II":      875.0,  // H  14:35.0
   "Christ's II":       882.1,  // H  14:42.1
   "Clare II":          888.8,  // H  14:48.8
@@ -289,6 +294,7 @@ const FORM_TIMES = {
 const FORM_SRC = {
   "Queens'":true,"Darwin":true,"Girton":true,"Sidney Sussex":true,
   "Queens' II":true,"Magdalene II":true,"Robinson II":true,
+  "St. Catharine's":true,"Robinson":true,"Pembroke II":true,
 };
 
 function getFormTime(crew) { return FORM_TIMES[crew] ?? null; }
@@ -318,62 +324,62 @@ let currentPage = 'sim'; // 'sim' | 'form'
 // ── Full race data for Form Guide page ──────────────────────────────────────
 // radTime / h2hTime: raw seconds. null = did not race.
 // radEst / h2hEst: true if time is estimated (RAD × 2.04), not directly measured.
-const CATZ_RAD = 445.39, CATZ_H2H = 911.5;
+const CATZ_RAD = 445.39, CATZ_H2H = 911.5, CATZ_CHAMPS = 379.0;
 const RACE_DATA = [
   // Division 1
-  {crew:"Lady Margaret",    div:0, pos:1,  radTime:null,   h2hTime:777.3},
-  {crew:"Peterhouse",       div:0, pos:2,  radTime:null,   h2hTime:null},
-  {crew:"Caius",            div:0, pos:3,  radTime:null,   h2hTime:770.7},
-  {crew:"Emmanuel",         div:0, pos:4,  radTime:391.12, h2hTime:800.8},
-  {crew:"Jesus",            div:0, pos:5,  radTime:null,   h2hTime:null},
-  {crew:"Magdalene",        div:0, pos:6,  radTime:null,   h2hTime:853.0},
-  {crew:"St. Catharine's",  div:0, pos:7,  radTime:null,   h2hTime:null},
-  {crew:"Downing",          div:0, pos:8,  radTime:null,   h2hTime:834.7},
-  {crew:"King's",           div:0, pos:9,  radTime:null,   h2hTime:null},
-  {crew:"Selwyn",           div:0, pos:10, radTime:null,   h2hTime:null},
-  {crew:"Pembroke",         div:0, pos:11, radTime:null,   h2hTime:809.6},
-  {crew:"Queens'",          div:0, pos:12, radTime:408.69, h2hTime:null},
-  {crew:"Lady Margaret II", div:0, pos:13, radTime:null,   h2hTime:872.5},
-  {crew:"Clare",            div:0, pos:14, radTime:392.26, h2hTime:816.8},
-  {crew:"Fitzwilliam",      div:0, pos:15, radTime:null,   h2hTime:818.8},
-  {crew:"Robinson",         div:0, pos:16, radTime:null,   h2hTime:null},
-  {crew:"Hughes Hall",      div:0, pos:17, radTime:null,   h2hTime:null},
+  {crew:"Lady Margaret",    div:0, pos:1,  radTime:null,   h2hTime:777.3, champsTime:341.00},
+  {crew:"Peterhouse",       div:0, pos:2,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Caius",            div:0, pos:3,  radTime:null,   h2hTime:770.7, champsTime:null},
+  {crew:"Emmanuel",         div:0, pos:4,  radTime:391.12, h2hTime:800.8, champsTime:353.00},
+  {crew:"Jesus",            div:0, pos:5,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Magdalene",        div:0, pos:6,  radTime:null,   h2hTime:853.0, champsTime:null},
+  {crew:"St. Catharine's",  div:0, pos:7,  radTime:null,   h2hTime:null,  champsTime:359.00},
+  {crew:"Downing",          div:0, pos:8,  radTime:null,   h2hTime:834.7, champsTime:null},
+  {crew:"King's",           div:0, pos:9,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Selwyn",           div:0, pos:10, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Pembroke",         div:0, pos:11, radTime:null,   h2hTime:809.6, champsTime:345.36},
+  {crew:"Queens'",          div:0, pos:12, radTime:408.69, h2hTime:null,  champsTime:347.00},
+  {crew:"Lady Margaret II", div:0, pos:13, radTime:null,   h2hTime:872.5, champsTime:361.00},
+  {crew:"Clare",            div:0, pos:14, radTime:392.26, h2hTime:816.8, champsTime:346.27},
+  {crew:"Fitzwilliam",      div:0, pos:15, radTime:null,   h2hTime:818.8, champsTime:null},
+  {crew:"Robinson",         div:0, pos:16, radTime:null,   h2hTime:null,  champsTime:352.00},
+  {crew:"Hughes Hall",      div:0, pos:17, radTime:null,   h2hTime:null,  champsTime:null},
   // Division 2
-  {crew:"First and Third",    div:1, pos:1,  radTime:null,   h2hTime:null},
-  {crew:"Churchill",          div:1, pos:2,  radTime:null,   h2hTime:null},
-  {crew:"Wolfson",            div:1, pos:3,  radTime:null,   h2hTime:null},
-  {crew:"Caius II",           div:1, pos:4,  radTime:null,   h2hTime:812.0},
-  {crew:"Girton",             div:1, pos:5,  radTime:426.52, h2hTime:null,   note:"H2H DNF"},
-  {crew:"Christ's",           div:1, pos:6,  radTime:404.95, h2hTime:847.6},
-  {crew:"Trinity Hall",       div:1, pos:7,  radTime:388.78, h2hTime:801.1},
-  {crew:"Emmanuel II",        div:1, pos:8,  radTime:null,   h2hTime:856.0},
-  {crew:"Pembroke II",        div:1, pos:9,  radTime:null,   h2hTime:null},
-  {crew:"First and Third II", div:1, pos:10, radTime:null,   h2hTime:816.9},
-  {crew:"Corpus Christi",     div:1, pos:11, radTime:430.27, h2hTime:850.2},
-  {crew:"Homerton",           div:1, pos:12, radTime:null,   h2hTime:null},
-  {crew:"St. Edmund's",       div:1, pos:13, radTime:null,   h2hTime:null},
-  {crew:"Jesus II",           div:1, pos:14, radTime:null,   h2hTime:null},
-  {crew:"Darwin",             div:1, pos:15, radTime:422.58, h2hTime:null},
-  {crew:"Sidney Sussex",      div:1, pos:16, radTime:426.93, h2hTime:null},
-  {crew:"Peterhouse II",      div:1, pos:17, radTime:null,   h2hTime:null},
+  {crew:"First and Third",    div:1, pos:1,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Churchill",          div:1, pos:2,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Wolfson",            div:1, pos:3,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Caius II",           div:1, pos:4,  radTime:null,   h2hTime:812.0, champsTime:null},
+  {crew:"Girton",             div:1, pos:5,  radTime:426.52, h2hTime:null,  champsTime:null,  note:"H2H DNF"},
+  {crew:"Christ's",           div:1, pos:6,  radTime:404.95, h2hTime:847.6, champsTime:null},
+  {crew:"Trinity Hall",       div:1, pos:7,  radTime:388.78, h2hTime:801.1, champsTime:null},
+  {crew:"Emmanuel II",        div:1, pos:8,  radTime:null,   h2hTime:856.0, champsTime:355.00},
+  {crew:"Pembroke II",        div:1, pos:9,  radTime:null,   h2hTime:null,  champsTime:366.00},
+  {crew:"First and Third II", div:1, pos:10, radTime:null,   h2hTime:816.9, champsTime:null},
+  {crew:"Corpus Christi",     div:1, pos:11, radTime:430.27, h2hTime:850.2, champsTime:null},
+  {crew:"Homerton",           div:1, pos:12, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"St. Edmund's",       div:1, pos:13, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Jesus II",           div:1, pos:14, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Darwin",             div:1, pos:15, radTime:422.58, h2hTime:null,  champsTime:null},
+  {crew:"Sidney Sussex",      div:1, pos:16, radTime:426.93, h2hTime:null,  champsTime:377.53},
+  {crew:"Peterhouse II",      div:1, pos:17, radTime:null,   h2hTime:null,  champsTime:null},
   // Division 3
-  {crew:"Downing II",           div:2, pos:1,  radTime:null,   h2hTime:null},
-  {crew:"St. Catharine's II",   div:2, pos:2,  radTime:445.39, h2hTime:911.5, isCatz:true},
-  {crew:"Clare Hall",           div:2, pos:3,  radTime:null,   h2hTime:null},
-  {crew:"Magdalene II",         div:2, pos:4,  radTime:458.12, h2hTime:null,   note:"Raced Div 1 cat."},
-  {crew:"Queens' II",           div:2, pos:5,  radTime:422.75, h2hTime:null},
-  {crew:"Clare II",             div:2, pos:6,  radTime:437.86, h2hTime:888.8},
-  {crew:"Emmanuel III",         div:2, pos:7,  radTime:422.11, h2hTime:861.5},
-  {crew:"Selwyn II",            div:2, pos:8,  radTime:null,   h2hTime:null},
-  {crew:"Churchill II",         div:2, pos:9,  radTime:423.75, h2hTime:875.0,  note:"H2H placed Band 2"},
-  {crew:"Christ's II",          div:2, pos:10, radTime:429.89, h2hTime:882.1},
-  {crew:"Fitzwilliam II",       div:2, pos:11, radTime:445.31, h2hTime:903.6},
-  {crew:"Trinity Hall II",      div:2, pos:12, radTime:418.82, h2hTime:841.4,  note:"Raced Lower Div cat."},
-  {crew:"Lucy Cavendish",       div:2, pos:13, radTime:null,   h2hTime:null},
-  {crew:"Robinson II",          div:2, pos:14, radTime:461.13, h2hTime:null},
-  {crew:"Jesus III",            div:2, pos:15, radTime:null,   h2hTime:null},
-  {crew:"Wolfson II",           div:2, pos:16, radTime:null,   h2hTime:null},
-  {crew:"Lady Margaret III",    div:2, pos:17, radTime:null,   h2hTime:null},
+  {crew:"Downing II",           div:2, pos:1,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"St. Catharine's II",   div:2, pos:2,  radTime:445.39, h2hTime:911.5, champsTime:379.00, isCatz:true},
+  {crew:"Clare Hall",           div:2, pos:3,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Magdalene II",         div:2, pos:4,  radTime:458.12, h2hTime:null,  champsTime:null,  note:"Raced Div 1 cat."},
+  {crew:"Queens' II",           div:2, pos:5,  radTime:422.75, h2hTime:null,  champsTime:362.00},
+  {crew:"Clare II",             div:2, pos:6,  radTime:437.86, h2hTime:888.8, champsTime:381.04},
+  {crew:"Emmanuel III",         div:2, pos:7,  radTime:422.11, h2hTime:861.5, champsTime:null},
+  {crew:"Selwyn II",            div:2, pos:8,  radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Churchill II",         div:2, pos:9,  radTime:423.75, h2hTime:875.0, champsTime:null,  note:"H2H placed Band 2"},
+  {crew:"Christ's II",          div:2, pos:10, radTime:429.89, h2hTime:882.1, champsTime:null},
+  {crew:"Fitzwilliam II",       div:2, pos:11, radTime:445.31, h2hTime:903.6, champsTime:null},
+  {crew:"Trinity Hall II",      div:2, pos:12, radTime:418.82, h2hTime:841.4, champsTime:null,  note:"Raced Lower Div cat."},
+  {crew:"Lucy Cavendish",       div:2, pos:13, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Robinson II",          div:2, pos:14, radTime:461.13, h2hTime:null,  champsTime:null},
+  {crew:"Jesus III",            div:2, pos:15, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Wolfson II",           div:2, pos:16, radTime:null,   h2hTime:null,  champsTime:null},
+  {crew:"Lady Margaret III",    div:2, pos:17, radTime:null,   h2hTime:null,  champsTime:null},
 ];
 
 function initState() {
@@ -621,6 +627,7 @@ function renderFormGuidePage() {
     <span><strong>Sources:</strong></span>
     <span>H = Spring Head 2 Head, 3 May 2026 (~3000m)</span>
     <span>R = RAD Mile 2026 estimate (2000m time × 2.04)</span>
+    <span>C = Champs VIII Head 2026 estimate (time × 2.35)</span>
     <span><span style="color:var(--green)">■</span> faster than Catz</span>
     <span><span style="color:var(--red)">■</span> slower than Catz</span>
     <span>Δ = seconds vs Catz (positive = crew faster)</span>
@@ -641,6 +648,8 @@ function renderFormGuidePage() {
           ${showDelta ? '<th class="r">Δ Catz</th>' : ''}
           <th class="r">H2H</th>
           ${showDelta ? '<th class="r">Δ Catz</th>' : ''}
+          <th class="r">Champs VIII</th>
+          ${showDelta ? '<th class="r">Δ Catz</th>' : ''}
           <th style="text-align:center">Src</th>
           <th>Notes</th>
         </tr></thead>
@@ -648,12 +657,14 @@ function renderFormGuidePage() {
 
     for (const row of rows) {
       const isCatz = !!row.isCatz;
-      const radStr  = fmtRad(row.radTime);
-      const h2hStr  = fmtH2H(row.h2hTime);
+      const radStr    = fmtRad(row.radTime);
+      const h2hStr    = fmtH2H(row.h2hTime);
+      const champsStr = fmtRad(row.champsTime);
 
       // Δ vs Catz: positive = crew is faster (lower time)
-      const radDelta = row.radTime !== null ? CATZ_RAD - row.radTime : null;
-      const h2hDelta = row.h2hTime !== null ? CATZ_H2H - row.h2hTime : null;
+      const radDelta    = row.radTime    !== null ? CATZ_RAD    - row.radTime    : null;
+      const h2hDelta    = row.h2hTime    !== null ? CATZ_H2H    - row.h2hTime    : null;
+      const champsDelta = row.champsTime !== null ? CATZ_CHAMPS - row.champsTime : null;
 
       const deltaClass = (v) => v === null ? '' : v > 0 ? 'fg-fast' : 'fg-slow';
       const deltaStr   = (v) => v === null ? '—' : (v > 0 ? `+${v.toFixed(1)}s` : `${v.toFixed(1)}s`);
@@ -661,16 +672,16 @@ function renderFormGuidePage() {
       // Threat level badge (Div 3 only, crews below Catz in the ladder)
       let threatBadge = '';
       if (d === 2 && !isCatz && row.pos > 2) {
-        const bestAdv = Math.max(radDelta ?? -Infinity, h2hDelta ?? -Infinity);
+        const bestAdv = Math.max(radDelta ?? -Infinity, h2hDelta ?? -Infinity, champsDelta ?? -Infinity);
         if (bestAdv > 20)       threatBadge = `<span class="fg-threat threat-high">⚠ High</span>`;
         else if (bestAdv > 5)   threatBadge = `<span class="fg-threat threat-med">↑ Medium</span>`;
         else if (bestAdv !== -Infinity) threatBadge = `<span class="fg-threat threat-low">✓ Low</span>`;
       }
 
       // Source indicator
-      const hasAnyData = row.radTime !== null || row.h2hTime !== null;
+      const hasAnyData = row.radTime !== null || row.h2hTime !== null || row.champsTime !== null;
       const src = hasAnyData
-        ? [row.radTime ? 'R' : '', row.h2hTime ? 'H' : ''].filter(Boolean).join('+')
+        ? [row.radTime ? 'R' : '', row.h2hTime ? 'H' : '', row.champsTime ? 'C' : ''].filter(Boolean).join('+')
         : '—';
       const noFormBadge = !hasAnyData ? ' <span class="no-form-badge">no data</span>' : '';
 
@@ -681,6 +692,8 @@ function renderFormGuidePage() {
         ${showDelta ? `<td class="fg-delta ${deltaClass(radDelta)}">${showDelta ? deltaStr(radDelta) : ''}</td>` : ''}
         <td class="fg-time ${h2hStr ? deltaClass(h2hDelta) : 'fg-none'}">${h2hStr ?? '—'}</td>
         ${showDelta ? `<td class="fg-delta ${deltaClass(h2hDelta)}">${showDelta ? deltaStr(h2hDelta) : ''}</td>` : ''}
+        <td class="fg-time ${champsStr ? deltaClass(champsDelta) : 'fg-none'}">${champsStr ?? '—'}</td>
+        ${showDelta ? `<td class="fg-delta ${deltaClass(champsDelta)}">${showDelta ? deltaStr(champsDelta) : ''}</td>` : ''}
         <td class="fg-src">${src}</td>
         <td class="fg-note">${row.note ?? ''}</td>
       </tr>`;
