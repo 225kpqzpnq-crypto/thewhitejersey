@@ -154,12 +154,15 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .boat-picker label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
 .boat-picker select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.82rem;font-weight:600;cursor:pointer}
 .boat-picker select:hover{border-color:var(--catz)}
-.mc-panel{margin-top:14px;border-top:1px solid var(--border);padding-top:10px}
+.mc-panel{margin-bottom:14px;padding:10px;background:var(--surface2);border:1px solid var(--accent2);border-radius:8px}
+.mc-panel.mc-empty{border-style:dashed;border-color:var(--border)}
 .mc-panel h3{font-size:.78rem;font-weight:700;color:var(--text);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.mc-hint{font-size:.72rem;color:var(--text-dim);line-height:1.4}
+.mc-hint strong{color:var(--text)}
 .mc-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.72rem;border-bottom:1px solid rgba(46,51,71,.3)}
 .mc-row:last-child{border-bottom:none}
-.mc-row.mc-mine{background:var(--catz-bg);border-radius:4px;padding:3px 4px;margin:0 -4px}
-.mc-pct{display:inline-block;min-width:32px;text-align:center;padding:1px 4px;border-radius:4px;color:#fff;font-weight:800;font-size:.65rem}
+.mc-row.mc-mine{background:var(--catz-bg);border-radius:4px;padding:3px 4px;margin:0 -4px;border-bottom:none}
+.mc-pct{display:inline-block;min-width:32px;text-align:center;padding:1px 4px;border-radius:4px;color:#fff;font-weight:800;font-size:.65rem;flex-shrink:0}
 .mc-pair{flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sidebar-tab{flex:1;padding:5px 8px;font-size:.72rem;font-weight:700;text-align:center;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all .15s}
 .sidebar-tab.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
@@ -551,6 +554,8 @@ function initState() {
     activeBumpers:[null, null, null, null],
     // manualModes[i]: whether day i+1 is in manual input mode
     manualModes:  [false, false, false, false],
+    // dayProbs[i]: per-pair Monte Carlo probabilities from the last form sim (null if none run)
+    dayProbs:     [null, null, null, null],
   };
 }
 
@@ -1331,7 +1336,7 @@ function renderSidebar() {
     <select id="boatSelect" onchange="setMyBoat(this.value)">${boatOptions}</select>
   </div>`;
 
-  sb.innerHTML = tabHtml + boatPicker + `
+  sb.innerHTML = tabHtml + boatPicker + renderMCPanel() + `
   <h2>⭐ ${MY_BOAT}</h2>
   <div class="catz-stat"><label>Current Division</label><span class="val" style="color:var(--catz)">${divLabel(cs.div)}</span></div>
   <div class="catz-stat"><label>Current Position</label><span class="val">${cs.pos+1} / ${DIV_SIZE}</span></div>
@@ -1349,20 +1354,29 @@ function renderSidebar() {
     <div class="pace-status ${paceClass}">${paceText}</div>
   </div>
   ${cs.daysRaced > 0 ? `<div class="catz-day-log"><h3>Day-by-Day</h3>${dayLog}</div>`
-    : '<div style="margin-top:12px;font-size:.78rem;color:var(--text-dim)">Simulate or enter Day 1 to begin.</div>'}
-  ${renderMCPanel()}`;
+    : '<div style="margin-top:12px;font-size:.78rem;color:var(--text-dim)">Simulate or enter Day 1 to begin.</div>'}`;
 }
 
 // Render a panel showing Monte Carlo bump probabilities for the most recently
-// form-simulated day. Highlights pairs involving my boat.
+// form-simulated day. Highlights pairs involving my boat. Always visible —
+// shows a placeholder when no form sim has been run yet.
 function renderMCPanel(){
-  const probs = state.dayProbs;
-  if (!probs) return '';
+  const probs = state.dayProbs || [];
   let lastDay = -1;
   for (let d = 0; d < TOTAL_DAYS; d++) if (probs[d]) lastDay = d;
-  if (lastDay < 0) return '';
-  const arr = probs[lastDay].filter(p => p.prob >= 0.10).slice(0, 12);
-  if (!arr.length) return '';
+  if (lastDay < 0){
+    return `<div class="mc-panel mc-empty">
+      <h3>🎲 Monte Carlo Probabilities</h3>
+      <div class="mc-hint">Click the <strong>📊</strong> button on any day to run 400 form-based trials. Per-bump probabilities will appear here, with bumps involving <strong>${MY_BOAT}</strong> highlighted.</div>
+    </div>`;
+  }
+  const arr = probs[lastDay].filter(p => p.prob >= 0.05).slice(0, 15);
+  if (!arr.length){
+    return `<div class="mc-panel mc-empty">
+      <h3>🎲 Day ${lastDay+1} Bump Probabilities <span style="opacity:.6;font-weight:400;font-size:.7rem">(400 MC trials)</span></h3>
+      <div class="mc-hint">No bumps reached the 5% threshold — Day ${lastDay+1} looks like a row-over.</div>
+    </div>`;
+  }
   let rows = '';
   for (const p of arr){
     const mine = (p.bumper === MY_BOAT || p.bumped === MY_BOAT);
@@ -1375,7 +1389,7 @@ function renderMCPanel(){
     </div>`;
   }
   return `<div class="mc-panel">
-    <h3>🎲 Day ${lastDay+1} Bump Probabilities <span style="opacity:.6;font-weight:400;font-size:.7rem">(400 MC trials)</span></h3>
+    <h3>🎲 Day ${lastDay+1} Bump Probabilities <span style="opacity:.6;font-weight:400;font-size:.7rem">(400 MC trials · top ${arr.length})</span></h3>
     ${rows}
   </div>`;
 }
