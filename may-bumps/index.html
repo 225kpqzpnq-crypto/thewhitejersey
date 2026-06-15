@@ -192,9 +192,6 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .threat-high{background:rgba(248,113,113,.2);color:var(--red)}
 .threat-med{background:rgba(251,191,36,.15);color:var(--yellow)}
 .threat-low{background:rgba(52,211,153,.1);color:var(--green)}
-.fg-table tr.no-form-row td{opacity:.4}
-.fg-table tr.no-form-row:hover td{opacity:.65}
-.no-form-badge{font-size:.58rem;color:var(--text-dim);padding:1px 4px;border-radius:3px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-style:italic;white-space:nowrap}
 .fg-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:var(--text-dim);margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
 .fg-legend span{display:flex;align-items:center;gap:4px}
 .nav-tab{padding:6px 14px;border-radius:6px;border:1px solid var(--border);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
@@ -245,49 +242,63 @@ const HDR_H = 52;
 const CON_W = 22;
 
 // ── Form benchmark data ──────────────────────────────────────────────────────
-// Sources: Radegund Mile 2026 (2000m), Spring Head 2 Head 3 May 2026 (~3000m),
-//          and Champs VIII Head 2026.
-// All values are H2H-equivalent seconds.
-//   Primary:   actual H2H time (marked H)
-//   Estimated: RAD Mile × 2.04 conversion factor (marked R; calibrated on 6 crews with both)
-//              Champs VIII Head × 2.35 conversion factor (marked C; calibrated on 8 crews with both)
-// Crews without data fall back to position-based probability (~35% adjacent pair).
+// Values stored here are "Net Form" — a weighted blend of recent race times
+// and last term's Lent Bumps results. Lower = faster.
+//
+//   Net Form (s) = H2H-equivalent time − (W_lent × Lent 2026 net change)
+//
+// Lent and May start orders are independent, but performance correlates over
+// time. The per-position Lent weight scales with where the crew finished Lent
+// (i.e. how fast the crews they bumped were):
+//   Lent finish pos  1–17  →  W_lent = 3.5 s/position   (top of river)
+//   Lent finish pos 18–34  →  W_lent = 2.5 s/position   (middle)
+//   Lent finish pos  35+   →  W_lent = 1.5 s/position   (bottom)
+//   Not in Lent            →  no adjustment
+//
+// Sources for the H2H-equivalent time:
+//   H = actual Spring H2H 2026 time (primary)
+//   R = RAD Mile 2026 × 2.04 (calibrated on 6 crews with both RAD and H2H)
+//   C = Champs VIII Head 2026 × 2.35 (calibrated on 8 crews with both)
+//
+// Crews without race-time data are omitted and fall back to position-based
+// probability (~35% adjacent pair). See form-guide.md "Net Form Guide" for
+// the unified ranking.
 const FORM_TIMES = {
   // Division 1
-  "Lady Margaret":     777.3,  // H  12:57.3
-  "Caius":             770.7,  // H  12:50.7
-  "Emmanuel":          800.8,  // H  13:20.8
-  "Magdalene":         853.0,  // H  14:13.0
-  "Downing":           834.7,  // H  13:54.7
-  "Pembroke":          809.6,  // H  13:29.6
-  "St. Catharine's":   844.4,  // C  Champs 5:59.0
-  "Queens'":           816.2,  // C  Champs 5:47.0  (updated from RAD 6:48.69×2.04)
-  "Lady Margaret II":  872.5,  // H  14:32.5
-  "Clare":             816.8,  // H  13:36.8
-  "Fitzwilliam":       818.8,  // H  13:38.8
-  "Robinson":          827.9,  // C  Champs 5:52.0
+  "Lady Margaret":     780.8,  // H 777.3 · Lent 2 · −1 · W3.5
+  "Caius":             760.2,  // H 770.7 · Lent 1 · +3 · W3.5
+  "Emmanuel":          793.8,  // H 800.8 · Lent 5 · +2 · W3.5
+  "Magdalene":         867.0,  // H 853.0 · Lent 10 · −4 · W3.5
+  "Downing":           841.7,  // H 834.7 · Lent 4 · −2 · W3.5
+  "Pembroke":          802.6,  // H 809.6 · Lent 6 · +2 · W3.5
+  "St. Catharine's":   851.4,  // C 844.4 · Lent 11 · −2 · W3.5
+  "Queens'":           819.7,  // C 816.2 · Lent 14 · −1 · W3.5
+  "Lady Margaret II":  877.5,  // H 872.5 · Lent 21 · −2 · W2.5
+  "Clare":             830.8,  // H 816.8 · Lent 7 · −4 · W3.5
+  "Fitzwilliam":       811.8,  // H 818.8 · Lent 16 · +2 · W3.5
+  "Robinson":          820.9,  // C 827.9 · Lent 13 · +2 · W3.5
   // Division 2
-  "Trinity Hall":      801.1,  // H  13:21.1
-  "Caius II":          812.0,  // H  13:32.0
-  "First and Third II":816.9,  // H  13:36.9
-  "Christ's":          847.6,  // H  14:07.6
-  "Corpus Christi":    850.2,  // H  14:10.2
-  "Emmanuel II":       856.0,  // H  14:16.0
-  "Pembroke II":       860.9,  // C  Champs 6:06.0
-  "Darwin":            862.1,  // R  RAD 7:02.58
-  "Girton":            870.1,  // R  RAD 7:06.52 (H2H DNF)
-  "Sidney Sussex":     870.9,  // R  RAD 7:06.93
+  "Trinity Hall":      794.1,  // H 801.1 · Lent 8 · +2 · W3.5
+  "Caius II":          802.0,  // H 812.0 · Lent 20 · +4 · W2.5
+  "First and Third II":809.4,  // H 816.9 · Lent 26 · +3 · W2.5
+  "Christ's":          850.1,  // H 847.6 · Lent 18 · −1 · W2.5
+  "Corpus Christi":    840.2,  // H 850.2 · Lent 22 · +4 · W2.5
+  "Emmanuel II":       861.0,  // H 856.0 · Lent 32 · −2 · W2.5
+  "Pembroke II":       853.4,  // C 860.9 · Lent 31 · +3 · W2.5
+  "Darwin":            854.6,  // R 862.1 · Lent 28 · +3 · W2.5
+  "Girton":            875.1,  // R 870.1 · Lent 24 · −2 · W2.5 (H2H DNF)
+  "Sidney Sussex":     875.9,  // R 870.9 · Lent 30 · −2 · W2.5
   // Division 3
-  "Trinity Hall II":   841.4,  // H  14:01.4  ← 10 below Catz, fastest Div 3 boat
-  "Emmanuel III":      861.5,  // H  14:21.5
-  "Queens' II":        851.5,  // C  Champs 6:02.0  (updated from RAD 7:02.75×2.04)
-  "Churchill II":      875.0,  // H  14:35.0
-  "Christ's II":       882.1,  // H  14:42.1
-  "Clare II":          888.8,  // H  14:48.8
-  "Fitzwilliam II":    903.6,  // H  15:03.6
-  "St. Catharine's II":911.5,  // H  15:11.5  ← Catz O2
-  "Magdalene II":      935.6,  // R  RAD 7:38.12
-  "Robinson II":       940.7,  // R  RAD 7:41.13
+  "Trinity Hall II":   838.4,  // H 841.4 · Lent 38 · +2 · W1.5  ← fastest Div 3 boat
+  "Emmanuel III":      855.5,  // H 861.5 · Lent 48 · +4 · W1.5
+  "Queens' II":        848.5,  // C 851.5 · Lent 36 · +2 · W1.5
+  "Churchill II":      875.0,  // H 875.0 · Lent n/a (not in Lent results)
+  "Christ's II":       874.6,  // H 882.1 · Lent 33 · +3 · W2.5
+  "Clare II":          894.8,  // H 888.8 · Lent 37 · −4 · W1.5
+  "Fitzwilliam II":    903.6,  // H 903.6 · Lent 39 · 0 · W1.5
+  "St. Catharine's II":911.5,  // H 911.5 · Lent 44 · 0 · W1.5  ← Catz O2
+  "Magdalene II":      941.6,  // R 935.6 · Lent 41 · −4 · W1.5
+  "Robinson II":       942.2,  // R 940.7 · Lent 54 · −1 · W1.5
 };
 
 // Source label for display
@@ -453,8 +464,6 @@ function simulateDay(divisions) {
 }
 
 function simulateDayForm(divisions) {
-  // Deterministic: bump iff both crews have form data and chaser is faster.
-  // No form data on either side → row over. No overbumps (too speculative).
   const divs  = divisions.map(d => [...d]);
   const done  = new Set();
   const bumps = [];
@@ -466,22 +475,37 @@ function simulateDayForm(divisions) {
       const ck = `${d}:${chaser}`, pk = `${d}:${prey}`;
       if (done.has(ck) || done.has(pk)) continue;
       const ct = getFormTime(chaser), pt = getFormTime(prey);
-      if (ct !== null && pt !== null && ct < pt) {
+      const prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : bumpProbability(1);
+      if (Math.random() < prob) {
         done.add(ck); done.add(pk);
         div.splice(i, 1); div.splice(i - 1, 0, chaser);
         bumps.push({bumper:chaser, bumped:prey, divIdx:d, overbump:false, sandwich:false});
+        if (i + 1 < div.length && i >= 2) {
+          const oc = div[i+1], ot = div[i-2];
+          const ock = `${d}:${oc}`, otk = `${d}:${ot}`;
+          if (!done.has(ock) && !done.has(otk)) {
+            const oct = getFormTime(oc), ott = getFormTime(ot);
+            const obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : bumpProbability(1) * 0.65;
+            if (Math.random() < obp) {
+              done.add(ock); done.add(otk);
+              const ocPos = div.indexOf(oc); div.splice(ocPos, 1);
+              const otPos = div.indexOf(ot); div.splice(otPos, 0, oc);
+              bumps.push({bumper:oc, bumped:ot, divIdx:d, overbump:true, sandwich:false});
+            }
+          }
+        }
       }
     }
   }
 
-  // Sandwich: only if both have form data and top of lower div is faster
   for (let d = 0; d < 2; d++) {
     const upper = divs[d], lower = divs[d+1];
     const bot = upper[upper.length-1], top = lower[0];
     const bk = `${d}:${bot}`, tk = `${d+1}:${top}`;
     if (!done.has(bk) && !done.has(tk)) {
       const bt = getFormTime(bot), tt = getFormTime(top);
-      if (bt !== null && tt !== null && tt < bt) {
+      const prob = (bt !== null && tt !== null) ? formBumpProb(tt, bt) * 0.6 : bumpProbability(1) * 0.6;
+      if (Math.random() < prob) {
         done.add(bk); done.add(tk);
         upper[upper.length-1] = top; lower[0] = bot;
         bumps.push({bumper:top, bumped:bot, divIdx:d, overbump:false, sandwich:true});
@@ -631,7 +655,6 @@ function renderFormGuidePage() {
     <span><span style="color:var(--green)">■</span> faster than Catz</span>
     <span><span style="color:var(--red)">■</span> slower than Catz</span>
     <span>Δ = seconds vs Catz (positive = crew faster)</span>
-    <span style="opacity:.55">&#9632; dimmed = no race data, bump probability is a position-based guess</span>
   </div>`;
 
   for (let d = 0; d < 3; d++) {
@@ -679,15 +702,13 @@ function renderFormGuidePage() {
       }
 
       // Source indicator
-      const hasAnyData = row.radTime !== null || row.h2hTime !== null || row.champsTime !== null;
-      const src = hasAnyData
+      const src = (row.radTime || row.h2hTime || row.champsTime)
         ? [row.radTime ? 'R' : '', row.h2hTime ? 'H' : '', row.champsTime ? 'C' : ''].filter(Boolean).join('+')
         : '—';
-      const noFormBadge = !hasAnyData ? ' <span class="no-form-badge">no data</span>' : '';
 
-      html += `<tr class="${isCatz ? 'catz-row' : ''} ${hasAnyData ? '' : 'no-form-row'}">
+      html += `<tr class="${isCatz ? 'catz-row' : ''}">
         <td class="fg-pos">${row.pos}</td>
-        <td class="fg-crew ${isCatz ? 'cn' : ''}">${row.crew}${noFormBadge}${threatBadge ? ' ' + threatBadge : ''}</td>
+        <td class="fg-crew ${isCatz ? 'cn' : ''}">${row.crew}${threatBadge ? ' ' + threatBadge : ''}</td>
         <td class="fg-time ${radStr ? deltaClass(radDelta) : 'fg-none'}">${radStr ?? '—'}</td>
         ${showDelta ? `<td class="fg-delta ${deltaClass(radDelta)}">${showDelta ? deltaStr(radDelta) : ''}</td>` : ''}
         <td class="fg-time ${h2hStr ? deltaClass(h2hDelta) : 'fg-none'}">${h2hStr ?? '—'}</td>
@@ -865,20 +886,18 @@ function renderDayCol(divIdx, day, di) {
     const mainBd = bdg ? `<span class="crew-bdg ${bdc}">${bdg}</span>` : '';
     const catzBd = (isCatz && !bdg) ? `<span class="crew-bdg badge-catz">⭐</span>` : '';
 
-    const ft = getFormTime(crew);
-    const isEst = FORM_SRC[crew];
     let formBd = '';
     if (showFormTimes) {
+      const ft = getFormTime(crew);
+      const isEst = FORM_SRC[crew];
       if (ft !== null) {
         formBd = `<span class="crew-bdg badge-form" style="font-size:.55rem">${fmtSec(ft)}${isEst?'*':''}</span>`;
       } else {
         formBd = `<span class="crew-bdg" style="background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.55rem">—</span>`;
       }
-    } else if (ft === null) {
-      formBd = `<span class="crew-bdg" style="background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.52rem;font-weight:400;font-style:italic;border:1px solid var(--border)">no data</span>`;
     }
 
-    html += `<div class="${rc}" ${clickH}><span class="crew-pos">${i+1}</span><span class="crew-name" style="${ft===null?'opacity:.6':''}">${crew}${swTag}</span>${mainBd}${catzBd}${formBd}</div>`;
+    html += `<div class="${rc}" ${clickH}><span class="crew-pos">${i+1}</span><span class="crew-name">${crew}${swTag}</span>${mainBd}${catzBd}${formBd}</div>`;
   }
 
   html += `</div></div>`;
