@@ -150,6 +150,10 @@ button:disabled{opacity:.4;cursor:not-allowed}
 
 /* ── Form Guide (sidebar tab) ── */
 .sidebar-tabs{display:flex;gap:4px;margin-bottom:14px}
+.boat-picker{margin-bottom:14px;display:flex;flex-direction:column;gap:4px}
+.boat-picker label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.boat-picker select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.82rem;font-weight:600;cursor:pointer}
+.boat-picker select:hover{border-color:var(--catz)}
 .sidebar-tab{flex:1;padding:5px 8px;font-size:.72rem;font-weight:700;text-align:center;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all .15s}
 .sidebar-tab.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
 .form-section{margin-bottom:12px}
@@ -233,7 +237,18 @@ const INITIAL_DIVISIONS = [
   ["Downing II","St. Catharine's II","Clare Hall","Magdalene II","Queens' II","Clare II","Emmanuel III","Selwyn II","Churchill II","Christ's II","Fitzwilliam II","Trinity Hall II","Lucy Cavendish","Robinson II","Jesus III","Wolfson II","Lady Margaret III"]
 ];
 
-const CATZ2   = "St. Catharine's II";
+// MY_BOAT = the boat tracked in the right-hand sidebar. Defaults to Catz II
+// (St. Catharine's II), but can be changed via the dropdown in the sidebar.
+// Stored as a mutable variable + persisted in localStorage so a reload keeps it.
+let MY_BOAT = (typeof localStorage !== 'undefined' && localStorage.getItem('myBoat')) || "St. Catharine's II";
+// Backwards-compat alias — code throughout uses CATZ2 to mean "my boat".
+let CATZ2 = MY_BOAT;
+function setMyBoat(name){
+  MY_BOAT = name;
+  CATZ2 = name;
+  try { localStorage.setItem('myBoat', name); } catch(e){}
+  render();
+}
 const TOTAL_DAYS = 4;
 const DIV_SIZE   = 17;
 // These MUST match the CSS variables --row-h and --hdr-h
@@ -349,7 +364,15 @@ let currentPage = 'sim'; // 'sim' | 'form'
 // radTime / h2hTime / champsTime: raw seconds. null = did not race.
 // lentEndPos: overall finishing position at Lent Bumps 2026 (null = not in Lent)
 // lentNet:    net bumps change at Lent Bumps 2026 (positive = up)
-const CATZ_RAD = 445.39, CATZ_H2H = 911.5, CATZ_CHAMPS = 379.0;
+// Reference times = my boat's times. Recomputed when the boat changes via getRef().
+function getRef(){
+  const r = RACE_DATA.find(x => x.crew === MY_BOAT);
+  return {
+    rad: r?.radTime ?? null,
+    h2h: r?.h2hTime ?? null,
+    champs: r?.champsTime ?? null,
+  };
+}
 const RACE_DATA = [
   // Division 1
   {crew:"Lady Margaret",    div:0, pos:1,  radTime:null,   h2hTime:777.3, champsTime:341.00, lentEndPos:2,  lentNet:-1},
@@ -724,14 +747,15 @@ function renderFormGuidePage() {
     <span>Lent = Lent Bumps 2026 net (with end position)</span>
     <span>Score = Net Form score /100 (100 = Caius, fastest)</span>
     <span><em>italic + "pred"</em> = predicted from Lent finishing position (no race data)</span>
-    <span><span style="color:var(--green)">■</span> faster than Catz</span>
-    <span><span style="color:var(--red)">■</span> slower than Catz</span>
-    <span>Δ = seconds vs Catz (positive = crew faster)</span>
+    <span><span style="color:var(--green)">■</span> faster than my boat</span>
+    <span><span style="color:var(--red)">■</span> slower than my boat</span>
+    <span>Δ = seconds vs ${MY_BOAT} (positive = crew faster)</span>
   </div>`;
 
+  const ref = getRef();
   for (let d = 0; d < 3; d++) {
     const rows = divData[d];
-    const showDelta = d === 2; // Div 3 only: show Δ vs Catz
+    const showDelta = d === 2; // Div 3 only: show Δ vs reference boat
 
     html += `<div class="fg-section">
       <div class="fg-section-title ${divClasses[d]}">${divTitles[d]}</div>
@@ -740,11 +764,11 @@ function renderFormGuidePage() {
           <th style="width:28px">#</th>
           <th>Crew</th>
           <th class="r">RAD Mile</th>
-          ${showDelta ? '<th class="r">Δ Catz</th>' : ''}
+          ${showDelta ? '<th class="r">Δ Mine</th>' : ''}
           <th class="r">H2H</th>
-          ${showDelta ? '<th class="r">Δ Catz</th>' : ''}
+          ${showDelta ? '<th class="r">Δ Mine</th>' : ''}
           <th class="r">Champs VIII</th>
-          ${showDelta ? '<th class="r">Δ Catz</th>' : ''}
+          ${showDelta ? '<th class="r">Δ Mine</th>' : ''}
           <th class="r">Lent</th>
           <th class="r">Score</th>
           <th style="text-align:center">Src</th>
@@ -753,22 +777,24 @@ function renderFormGuidePage() {
         <tbody>`;
 
     for (const row of rows) {
-      const isCatz = !!row.isCatz;
+      const isCatz = row.crew === MY_BOAT;
       const radStr    = fmtRad(row.radTime);
       const h2hStr    = fmtH2H(row.h2hTime);
       const champsStr = fmtRad(row.champsTime);
 
-      // Δ vs Catz: positive = crew is faster (lower time)
-      const radDelta    = row.radTime    !== null ? CATZ_RAD    - row.radTime    : null;
-      const h2hDelta    = row.h2hTime    !== null ? CATZ_H2H    - row.h2hTime    : null;
-      const champsDelta = row.champsTime !== null ? CATZ_CHAMPS - row.champsTime : null;
+      // Δ vs reference boat: positive = crew is faster (lower time)
+      const radDelta    = (row.radTime    !== null && ref.rad    !== null) ? ref.rad    - row.radTime    : null;
+      const h2hDelta    = (row.h2hTime    !== null && ref.h2h    !== null) ? ref.h2h    - row.h2hTime    : null;
+      const champsDelta = (row.champsTime !== null && ref.champs !== null) ? ref.champs - row.champsTime : null;
 
       const deltaClass = (v) => v === null ? '' : v > 0 ? 'fg-fast' : 'fg-slow';
       const deltaStr   = (v) => v === null ? '—' : (v > 0 ? `+${v.toFixed(1)}s` : `${v.toFixed(1)}s`);
 
-      // Threat level badge (Div 3 only, crews below Catz in the ladder)
+      // Threat level badge (only in the division my boat sits in, and only for
+      // crews starting behind me)
+      const myRef = RACE_DATA.find(r => r.crew === MY_BOAT);
       let threatBadge = '';
-      if (d === 2 && !isCatz && row.pos > 2) {
+      if (myRef && d === myRef.div && !isCatz && row.pos > myRef.pos) {
         const bestAdv = Math.max(radDelta ?? -Infinity, h2hDelta ?? -Infinity, champsDelta ?? -Infinity);
         if (bestAdv > 20)       threatBadge = `<span class="fg-threat threat-high">⚠ High</span>`;
         else if (bestAdv > 5)   threatBadge = `<span class="fg-threat threat-med">↑ Medium</span>`;
@@ -1097,7 +1123,7 @@ function renderFinalResults() {
 function renderFormGuide() {
   // Build per-division ranked tables sorted by form time
   let html = `<div class="sidebar-tabs">
-    <button class="sidebar-tab ${sidebarTab==='catz'?'active':''}" onclick="toggleSidebarTab('catz')">⭐ Catz II</button>
+    <button class="sidebar-tab ${sidebarTab==='catz'?'active':''}" onclick="toggleSidebarTab('catz')">⭐ My Boat</button>
     <button class="sidebar-tab ${sidebarTab==='form'?'active':''}" onclick="toggleSidebarTab('form')">📊 Form Guide</button>
   </div>`;
 
@@ -1161,10 +1187,10 @@ function renderFormGuide() {
 function renderSidebar() {
   const sb = document.getElementById('sidebar');
   const cs = catzStatus();
-  if (!cs) { sb.innerHTML = '<div style="color:var(--text-dim);font-size:.82rem">Catz II not found</div>'; return; }
+  if (!cs) { sb.innerHTML = `<div style="color:var(--text-dim);font-size:.82rem">${MY_BOAT} not found</div>`; return; }
 
   const tabHtml = `<div class="sidebar-tabs">
-    <button class="sidebar-tab ${sidebarTab==='catz'?'active':''}" onclick="toggleSidebarTab('catz')">⭐ Catz II</button>
+    <button class="sidebar-tab ${sidebarTab==='catz'?'active':''}" onclick="toggleSidebarTab('catz')">⭐ My Boat</button>
     <button class="sidebar-tab ${sidebarTab==='form'?'active':''}" onclick="toggleSidebarTab('form')">📊 Form Guide</button>
   </div>`;
 
@@ -1195,8 +1221,23 @@ function renderSidebar() {
     dayLog += `<div class="catz-log-item"><span class="log-day">D${d+1}</span><span class="log-result">${logText}</span></div>`;
   }
 
-  sb.innerHTML = tabHtml + `
-  <h2>⭐ Catz II Tracker</h2>
+  // Build the boat selector: all crews from INITIAL_DIVISIONS, grouped by division.
+  let boatOptions = '';
+  for (let d = 0; d < INITIAL_DIVISIONS.length; d++){
+    boatOptions += `<optgroup label="Men's Division ${d+1}">`;
+    for (const crew of INITIAL_DIVISIONS[d]){
+      const sel = crew === MY_BOAT ? ' selected' : '';
+      boatOptions += `<option value="${crew.replace(/"/g,'&quot;')}"${sel}>${crew}</option>`;
+    }
+    boatOptions += `</optgroup>`;
+  }
+  const boatPicker = `<div class="boat-picker">
+    <label for="boatSelect">My boat</label>
+    <select id="boatSelect" onchange="setMyBoat(this.value)">${boatOptions}</select>
+  </div>`;
+
+  sb.innerHTML = tabHtml + boatPicker + `
+  <h2>⭐ ${MY_BOAT}</h2>
   <div class="catz-stat"><label>Current Division</label><span class="val" style="color:var(--catz)">${divLabel(cs.div)}</span></div>
   <div class="catz-stat"><label>Current Position</label><span class="val">${cs.pos+1} / ${DIV_SIZE}</span></div>
   <div class="catz-stat"><label>Days Raced</label><span class="val">${cs.daysRaced} / 4</span></div>
