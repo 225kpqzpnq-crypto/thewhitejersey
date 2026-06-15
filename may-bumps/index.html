@@ -52,7 +52,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .legend{font-size:0.65rem;color:var(--text-dim);margin-left:auto}
 
 /* ── 7-col grid: day connector day connector day connector day ── */
-.day-columns-grid{display:grid;grid-template-columns:1fr 22px 1fr 22px 1fr 22px 1fr;align-items:start}
+.day-columns-grid{display:grid;grid-template-columns:1fr 22px 1fr 22px 1fr 22px 1fr 22px 1fr;align-items:start}
 
 /* ── Day column ── */
 .day-col{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;min-width:0}
@@ -85,6 +85,7 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .badge-up{background:rgba(52,211,153,.2);color:var(--green)}
 .badge-down{background:rgba(248,113,113,.2);color:var(--red)}
 .badge-catz{background:rgba(255,107,53,.25);color:var(--catz)}
+.badge-neutral{background:rgba(255,255,255,.06);color:var(--text-dim)}
 .sw-tag{font-size:.58rem;color:var(--yellow);margin-left:1px}
 
 /* ── Connector column ── */
@@ -581,18 +582,21 @@ function simulateDay(divisions) {
       if (done.has(ck) || done.has(pk)) continue;
       if (Math.random() < bumpProbability(1)) {
         done.add(ck); done.add(pk);
-        div.splice(i,1); div.splice(i-1,0,chaser);
+        // Regular bump = straight swap of adjacent crews.
+        [div[i-1], div[i]] = [div[i], div[i-1]];
         bumps.push({bumper:chaser,bumped:prey,divIdx:d,overbump:false,sandwich:false});
-        // Overbump: crew at i+1 passes the bump pair and targets crew at i-2
+        // Overbump: crew at i+1 passes the bump pair and targets crew at i-2.
+        // After the swap above, indices are: bump pair at i-1 (chaser), i (prey);
+        // overbump chaser still at i+1, overbump target still at i-2.
         if (i+1 < div.length && i >= 2) {
           const oc = div[i+1], ot = div[i-2];
           const ock = `${d}:${oc}`, otk = `${d}:${ot}`;
           if (!done.has(ock) && !done.has(otk) && Math.random() < bumpProbability(1)*0.65) {
             done.add(ock); done.add(otk);
-            const ocPos = div.indexOf(oc);
-            div.splice(ocPos,1);
-            const otPos = div.indexOf(ot);
-            div.splice(otPos,0,oc);
+            // Overbump = symmetric swap: oc and ot trade positions; the two
+            // crews in between (the original bump pair) stay where they are.
+            const ocPos = i+1, otPos = i-2;
+            [div[otPos], div[ocPos]] = [div[ocPos], div[otPos]];
             bumps.push({bumper:oc,bumped:ot,divIdx:d,overbump:true,sandwich:false});
           }
         }
@@ -631,7 +635,8 @@ function simulateDayForm(divisions) {
       const prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : bumpProbability(1);
       if (Math.random() < prob) {
         done.add(ck); done.add(pk);
-        div.splice(i, 1); div.splice(i - 1, 0, chaser);
+        // Regular bump = adjacent swap.
+        [div[i-1], div[i]] = [div[i], div[i-1]];
         bumps.push({bumper:chaser, bumped:prey, divIdx:d, overbump:false, sandwich:false});
         if (i + 1 < div.length && i >= 2) {
           const oc = div[i+1], ot = div[i-2];
@@ -641,8 +646,8 @@ function simulateDayForm(divisions) {
             const obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : bumpProbability(1) * 0.65;
             if (Math.random() < obp) {
               done.add(ock); done.add(otk);
-              const ocPos = div.indexOf(oc); div.splice(ocPos, 1);
-              const otPos = div.indexOf(ot); div.splice(otPos, 0, oc);
+              // Overbump = symmetric swap; the bump pair between them stays put.
+              [div[i-2], div[i+1]] = [div[i+1], div[i-2]];
               bumps.push({bumper:oc, bumped:ot, divIdx:d, overbump:true, sandwich:false});
             }
           }
@@ -726,10 +731,11 @@ function applyManualBumps(divisions, manualBumps) {
       bumps.push({bumper:bumperName,bumped:bumpedName,divIdx,overbump:false,sandwich:true});
     } else {
       const bp = div.indexOf(bumperName);
-      if (bp === -1 || div.indexOf(bumpedName) === -1) continue;
-      div.splice(bp,1);
-      const nbp = div.indexOf(bumpedName);
-      div.splice(nbp,0,bumperName);
+      const tp = div.indexOf(bumpedName);
+      if (bp === -1 || tp === -1) continue;
+      // Every bump (regular or overbump) is a symmetric swap of the two
+      // crews — crews in between (for an overbump) stay where they are.
+      [div[bp], div[tp]] = [div[tp], div[bp]];
       bumps.push({bumper:bumperName,bumped:bumpedName,divIdx,overbump:!!isOverbump,sandwich:false});
     }
   }
@@ -1014,8 +1020,9 @@ function renderContent() {
     for (let day = 1; day <= TOTAL_DAYS; day++) {
       const di = day - 1;
       html += renderDayCol(d, day, di);
-      if (day < TOTAL_DAYS) html += renderConnector(d, di);
+      html += renderConnector(d, di); // Day N → Day N+1 (or Day 4 → Final)
     }
+    html += renderFinalCol(d);
 
     html += `</div></div>`;
   }
@@ -1145,6 +1152,61 @@ function renderDayCol(divIdx, day, di) {
     html += `<div class="${rc}" ${clickH}><span class="crew-pos">${i+1}</span><span class="crew-name">${crew}${swTag}</span>${mainBd}${catzBd}${formBd}${scoreBd}</div>`;
   }
 
+  html += `</div></div>`;
+  return html;
+}
+
+// Renders the "Final" column next to Day 4 so you can read across each row
+// from start order → final position. Each crew shows its current cascaded
+// position with a small net-change badge vs the initial start order.
+function renderFinalCol(divIdx) {
+  const initialDivs = INITIAL_DIVISIONS;
+  const finalDivs   = getEffectiveStandings(TOTAL_DAYS); // after all entered days
+  const crews       = finalDivs[divIdx];
+  const allDone     = state.dayBumps.every(b => b !== null);
+
+  function absPos(name, divs){
+    for (let d = 0; d < divs.length; d++){
+      const p = divs[d].indexOf(name);
+      if (p !== -1) return d * DIV_SIZE + p;
+    }
+    return null;
+  }
+
+  const colCls = `day-col ${allDone ? 'day-col-done' : ''}`;
+  const statusText = allDone ? '✓ Final result' : 'In progress…';
+
+  let html = `<div class="${colCls}">
+    <div class="day-col-hdr">
+      <div class="day-col-hdr-top">
+        <span class="day-col-title">Final</span>
+      </div>
+      <div class="day-col-status">${statusText}</div>
+    </div>
+    <div class="crew-list">`;
+
+  for (let i = 0; i < crews.length; i++){
+    const crew   = crews[i];
+    const isCatz = crew === CATZ2;
+    const initP  = absPos(crew, initialDivs);
+    const finalP = divIdx * DIV_SIZE + i;
+    const delta  = initP != null ? initP - finalP : 0; // +ve = went up
+
+    let rc = 'crew-row';
+    if (isCatz) rc += ' catz';
+    if (delta > 0) rc += ' bumped-up';
+    else if (delta < 0) rc += ' bumped-down';
+
+    let bdg = '', bdc = '';
+    if (delta > 0)      { bdg = `+${delta}`;     bdc = 'badge-up'; }
+    else if (delta < 0) { bdg = `${delta}`;      bdc = 'badge-down'; }
+    else                { bdg = '—';             bdc = 'badge-neutral'; }
+
+    const catzBd = isCatz ? `<span class="crew-bdg badge-catz">⭐</span>` : '';
+    const mainBd = `<span class="crew-bdg ${bdc}">${bdg}</span>`;
+
+    html += `<div class="${rc}"><span class="crew-pos">${i+1}</span><span class="crew-name">${crew}</span>${catzBd}${mainBd}</div>`;
+  }
   html += `</div></div>`;
   return html;
 }
