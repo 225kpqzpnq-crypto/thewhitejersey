@@ -154,6 +154,13 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .boat-picker label{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
 .boat-picker select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.82rem;font-weight:600;cursor:pointer}
 .boat-picker select:hover{border-color:var(--catz)}
+.mc-panel{margin-top:14px;border-top:1px solid var(--border);padding-top:10px}
+.mc-panel h3{font-size:.78rem;font-weight:700;color:var(--text);margin:0 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.mc-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.72rem;border-bottom:1px solid rgba(46,51,71,.3)}
+.mc-row:last-child{border-bottom:none}
+.mc-row.mc-mine{background:var(--catz-bg);border-radius:4px;padding:3px 4px;margin:0 -4px}
+.mc-pct{display:inline-block;min-width:32px;text-align:center;padding:1px 4px;border-radius:4px;color:#fff;font-weight:800;font-size:.65rem}
+.mc-pair{flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sidebar-tab{flex:1;padding:5px 8px;font-size:.72rem;font-weight:700;text-align:center;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all .15s}
 .sidebar-tab.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
 .form-section{margin-bottom:12px}
@@ -485,6 +492,55 @@ const RACE_DATA = [
   }
 })();
 
+// ── Club correlation nudge ─────────────────────────────────────────────────
+// If a college's M1 is well above (or below) its division's average pace, its
+// M2/M3 are likely to be similarly placed relative to their own divisions. We
+// nudge PREDICTED Net Forms (not race-data values) toward the headship boat's
+// relative deviation, scaled by a club-correlation factor.
+const CLUB_INFLUENCED = new Set();
+(function applyClubCorrelation(){
+  const CLUB_FACTOR = 0.30;  // how much of head's deviation we expect to propagate
+  const BLEND       = 0.40;  // how much weight we give the club-prediction vs existing
+  function getClub(crew){ return crew.replace(/ III?$/, '').trim(); }
+  function getLevel(crew){
+    const m = crew.match(/ (II|III)$/);
+    return m ? (m[1] === 'III' ? 2 : 1) : 0;
+  }
+  // Division averages from current FORM_TIMES (post-Lent-prediction)
+  const divAvgs = [0,1,2].map(d => {
+    const ts = RACE_DATA.filter(r => r.div === d && FORM_TIMES[r.crew] != null)
+                        .map(r => FORM_TIMES[r.crew]);
+    return ts.length ? ts.reduce((a,b)=>a+b,0)/ts.length : null;
+  });
+  // Group by club
+  const clubs = {};
+  for (const row of RACE_DATA){
+    const c = getClub(row.crew);
+    (clubs[c] = clubs[c] || []).push(row);
+  }
+  for (const boats of Object.values(clubs)){
+    if (boats.length < 2) continue;
+    boats.sort((a,b) => getLevel(a.crew) - getLevel(b.crew));
+    // Find head boat with race data (not predicted) to avoid amplifying noise
+    const head = boats.find(b => FORM_TIMES[b.crew] != null && !PREDICTED_FORM.has(b.crew));
+    if (!head) continue;
+    const headAvg = divAvgs[head.div];
+    if (headAvg == null) continue;
+    const headDev = FORM_TIMES[head.crew] - headAvg;
+    // Apply nudge to lower boats that are PREDICTED (less reliable)
+    for (const sub of boats){
+      if (sub === head) continue;
+      if (!PREDICTED_FORM.has(sub.crew)) continue;
+      const subAvg = divAvgs[sub.div];
+      if (subAvg == null) continue;
+      const expected = subAvg + headDev * CLUB_FACTOR;
+      const current  = FORM_TIMES[sub.crew];
+      FORM_TIMES[sub.crew] = +(current * (1 - BLEND) + expected * BLEND).toFixed(1);
+      CLUB_INFLUENCED.add(sub.crew);
+    }
+  }
+})();
+
 function initState() {
   return {
     // dayBumps[i]: null = not yet entered; array = committed bumps (may be empty = rowed over)
@@ -606,6 +662,45 @@ function simulateDayForm(divisions) {
   }
 
   return {newDivisions:divs, bumps};
+}
+
+// ── Monte Carlo: run the form sim N times and aggregate bump probabilities ──
+// Each trial is one stochastic outcome of simulateDayForm(). We tally how often
+// each (divIdx, bumper, bumped) pair fires across trials, then build the most
+// likely *consistent* outcome by greedily picking high-probability bumps that
+// don't conflict (a crew can only be in one bump per day).
+function simulateDayFormMC(divisions, N){
+  N = N || 400;
+  const counts = new Map();
+  for (let t = 0; t < N; t++){
+    const {bumps} = simulateDayForm(divisions);
+    for (const b of bumps){
+      const flag = b.sandwich ? 'S' : (b.overbump ? 'O' : 'N');
+      const key  = `${b.divIdx}|${b.bumper}|${b.bumped}|${flag}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+  const probs = [];
+  for (const [k, c] of counts){
+    const [di, bumper, bumped, flag] = k.split('|');
+    probs.push({
+      divIdx: +di, bumper, bumped,
+      sandwich: flag === 'S', overbump: flag === 'O',
+      prob: c / N,
+    });
+  }
+  probs.sort((a,b) => b.prob - a.prob);
+  // Greedy modal outcome: take any bump > 50% that doesn't conflict
+  const used = new Set();
+  const chosen = [];
+  for (const p of probs){
+    if (p.prob < 0.5) continue;
+    const bk = `${p.divIdx}:${p.bumper}`, pk = `${p.divIdx}:${p.bumped}`;
+    if (used.has(bk) || used.has(pk)) continue;
+    used.add(bk); used.add(pk);
+    chosen.push(p);
+  }
+  return {bumps: chosen, probs};
 }
 
 // ════════════════════════════════════════════════
@@ -1254,7 +1349,35 @@ function renderSidebar() {
     <div class="pace-status ${paceClass}">${paceText}</div>
   </div>
   ${cs.daysRaced > 0 ? `<div class="catz-day-log"><h3>Day-by-Day</h3>${dayLog}</div>`
-    : '<div style="margin-top:12px;font-size:.78rem;color:var(--text-dim)">Simulate or enter Day 1 to begin.</div>'}`;
+    : '<div style="margin-top:12px;font-size:.78rem;color:var(--text-dim)">Simulate or enter Day 1 to begin.</div>'}
+  ${renderMCPanel()}`;
+}
+
+// Render a panel showing Monte Carlo bump probabilities for the most recently
+// form-simulated day. Highlights pairs involving my boat.
+function renderMCPanel(){
+  const probs = state.dayProbs;
+  if (!probs) return '';
+  let lastDay = -1;
+  for (let d = 0; d < TOTAL_DAYS; d++) if (probs[d]) lastDay = d;
+  if (lastDay < 0) return '';
+  const arr = probs[lastDay].filter(p => p.prob >= 0.10).slice(0, 12);
+  if (!arr.length) return '';
+  let rows = '';
+  for (const p of arr){
+    const mine = (p.bumper === MY_BOAT || p.bumped === MY_BOAT);
+    const pct  = Math.round(p.prob * 100);
+    const hue  = Math.round(p.prob * 130);
+    const tag  = p.sandwich ? ' <span style="opacity:.6">[SW]</span>' : (p.overbump ? ' <span style="opacity:.6">[OB]</span>' : '');
+    rows += `<div class="mc-row${mine?' mc-mine':''}">
+      <span class="mc-pct" style="background:hsla(${hue},65%,38%,.85)">${pct}%</span>
+      <span class="mc-pair"><strong>${p.bumper}</strong> → ${p.bumped}${tag}</span>
+    </div>`;
+  }
+  return `<div class="mc-panel">
+    <h3>🎲 Day ${lastDay+1} Bump Probabilities <span style="opacity:.6;font-weight:400;font-size:.7rem">(400 MC trials)</span></h3>
+    ${rows}
+  </div>`;
 }
 
 // ════════════════════════════════════════════════
@@ -1396,13 +1519,16 @@ function checkSandwich(bumper, bumpedDiv, bumpedPos) {
 
 function simulateDayFormN(di) {
   const startDivs = getStandings(di + 1);
-  const {bumps} = simulateDayForm(startDivs);
+  // Monte Carlo: 400 trials → modal outcome + per-pair probabilities.
+  const {bumps, probs} = simulateDayFormMC(startDivs, 400);
   state.dayBumps[di]      = simBumpsToManual(bumps);
+  state.dayProbs          = state.dayProbs || [null, null, null, null];
+  state.dayProbs[di]      = probs;
   state.pendingBumps[di]  = [];
   state.activeBumpers[di] = null;
   state.manualModes[di]   = false;
   render();
-  toast(`Day ${di+1} form-predicted — ${bumps.length} bump${bumps.length!==1?'s':''}!`, 'success');
+  toast(`Day ${di+1} Monte Carlo (400 runs) — ${bumps.length} bump${bumps.length!==1?'s':''} above 50%`, 'success');
 }
 
 function formSimAll() {
