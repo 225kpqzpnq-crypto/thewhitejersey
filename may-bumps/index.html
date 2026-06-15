@@ -310,11 +310,14 @@ const FORM_SRC = {
 
 function getFormTime(crew) { return FORM_TIMES[crew] ?? null; }
 
-// Form score out of 100: 100 = fastest Net Form across all crews
-// (currently Caius). Score is (fastestTime / crewTime) × 100 so it's a
-// percentage of the headship pace. Crews without a Net Form value get null.
-const FASTEST_FORM_TIME = Math.min(...Object.values(FORM_TIMES));
+// Crews whose Net Form is interpolated from Lent finishing position (not race time).
+// Populated by buildPredictedFormTimes() below, after RACE_DATA is declared.
+const PREDICTED_FORM = new Set();
+
+// Form score is computed lazily so predictions can be merged in first.
+let FASTEST_FORM_TIME = null;
 function getFormScore(crew) {
+  if (FASTEST_FORM_TIME == null) FASTEST_FORM_TIME = Math.min(...Object.values(FORM_TIMES));
   const t = FORM_TIMES[crew];
   if (t == null) return null;
   return (FASTEST_FORM_TIME / t) * 100;
@@ -403,6 +406,61 @@ const RACE_DATA = [
   {crew:"Wolfson II",           div:2, pos:16, radTime:null,   h2hTime:null,  champsTime:null,   lentEndPos:null, lentNet:null},
   {crew:"Lady Margaret III",    div:2, pos:17, radTime:null,   h2hTime:null,  champsTime:null,   lentEndPos:49, lentNet:-2},
 ];
+
+// ── Predict Net Form for crews missing race data ────────────────────────────
+// For crews that have a Lent 2026 finishing position but no race times, we
+// predict a Net Form value by interpolating from their Lent-position neighbours
+// that DO have race data. An ordering floor ensures crews who finished higher
+// in Lent end up at least slightly faster than those just below them — so e.g.
+// Clare Hall (Lent end 45, flat) is predicted slower than Catz II (Lent end 44,
+// flat). Predictions are flagged so they can be styled differently.
+(function buildPredictedFormTimes(){
+  function getLentWeight(p){
+    if (p == null) return 0;
+    if (p <= 17) return 3.5;
+    if (p <= 34) return 2.5;
+    return 1.5;
+  }
+  // Raw H2H-equivalent times (Net Form with Lent adjustment undone).
+  const raw = {};
+  for (const row of RACE_DATA){
+    const ft = FORM_TIMES[row.crew];
+    if (ft == null) continue;
+    const w = row.lentEndPos != null ? getLentWeight(row.lentEndPos) : 0;
+    raw[row.crew] = ft + w * (row.lentNet ?? 0);
+  }
+  // Anchors: crews with known raw times AND a Lent finishing position.
+  const anchors = RACE_DATA
+    .filter(r => raw[r.crew] != null && r.lentEndPos != null)
+    .map(r => ({crew:r.crew, p:r.lentEndPos, t:raw[r.crew]}))
+    .sort((a,b) => a.p - b.p);
+  const STEP = 0.5; // minimum per-position gap to preserve Lent ordering
+
+  for (const row of RACE_DATA){
+    if (FORM_TIMES[row.crew] != null) continue;     // already has race data
+    if (row.lentEndPos == null) continue;           // no Lent data either
+    const p = row.lentEndPos;
+    let above = null, below = null;
+    for (const a of anchors){
+      if (a.p < p) above = a;
+      else if (a.p > p){ below = a; break; }
+    }
+    let pred = null;
+    if (above && below){
+      const interp = above.t + (below.t - above.t) * (p - above.p) / (below.p - above.p);
+      const floor  = above.t + STEP * (p - above.p);     // must be slower than nearest above
+      pred = Math.max(floor, interp);
+    } else if (above){
+      pred = above.t + 1.5 * (p - above.p);              // extrapolate below the last anchor
+    } else if (below){
+      pred = below.t - 1.5 * (below.p - p);              // extrapolate above the first anchor
+    }
+    if (pred != null){
+      FORM_TIMES[row.crew] = +pred.toFixed(1);
+      PREDICTED_FORM.add(row.crew);
+    }
+  }
+})();
 
 function initState() {
   return {
@@ -665,6 +723,7 @@ function renderFormGuidePage() {
     <span>C = Champs VIII Head 2026 estimate (time × 2.35)</span>
     <span>Lent = Lent Bumps 2026 net (with end position)</span>
     <span>Score = Net Form score /100 (100 = Caius, fastest)</span>
+    <span><em>italic + "pred"</em> = predicted from Lent finishing position (no race data)</span>
     <span><span style="color:var(--green)">■</span> faster than Catz</span>
     <span><span style="color:var(--red)">■</span> slower than Catz</span>
     <span>Δ = seconds vs Catz (positive = crew faster)</span>
@@ -730,10 +789,20 @@ function renderFormGuidePage() {
         lentClass = row.lentNet > 0 ? 'fg-fast' : (row.lentNet < 0 ? 'fg-slow' : '');
       }
 
-      // Form score /100 (100 = fastest crew)
+      // Form score /100 (100 = fastest crew). Predicted scores (from Lent
+      // interpolation rather than race times) are shown in italics with a tag.
       const score = getFormScore(row.crew);
-      const scoreStr = score == null ? '—' : score.toFixed(1);
-      const scoreClass = score == null ? 'fg-none' : '';
+      const isPredicted = PREDICTED_FORM.has(row.crew);
+      let scoreStr, scoreClass;
+      if (score == null) {
+        scoreStr = '—'; scoreClass = 'fg-none';
+      } else if (isPredicted) {
+        scoreStr = `<em style="opacity:.85">${score.toFixed(1)}</em> <span style="opacity:.6;font-size:11px">pred</span>`;
+        scoreClass = '';
+      } else {
+        scoreStr = score.toFixed(1);
+        scoreClass = '';
+      }
 
       html += `<tr class="${isCatz ? 'catz-row' : ''}">
         <td class="fg-pos">${row.pos}</td>
@@ -930,13 +999,19 @@ function renderDayCol(divIdx, day, di) {
 
     // Net Form score /100 — always visible so you can see why bumps happen
     const score = getFormScore(crew);
+    const isPred = PREDICTED_FORM.has(crew);
     let scoreBd;
     if (score !== null) {
       // Colour-grade: higher = greener
       const t = (score - 80) / 20; // 80→0, 100→1
       const c = Math.max(0, Math.min(1, t));
       const hue = Math.round(0 + c * 130); // 0 red → 130 green
-      scoreBd = `<span class="crew-bdg badge-score" title="Net Form score (100 = Caius / fastest)" style="background:hsla(${hue},65%,38%,.85);color:#fff;font-size:.6rem;font-weight:700">${score.toFixed(1)}</span>`;
+      const opacity = isPred ? 0.55 : 0.85;
+      const title = isPred
+        ? `Net Form score (predicted from Lent finishing position; 100 = fastest crew)`
+        : `Net Form score (100 = Caius / fastest)`;
+      const style = isPred ? 'font-style:italic;' : '';
+      scoreBd = `<span class="crew-bdg badge-score" title="${title}" style="${style}background:hsla(${hue},65%,38%,${opacity});color:#fff;font-size:.6rem;font-weight:700">${score.toFixed(1)}</span>`;
     } else {
       scoreBd = `<span class="crew-bdg badge-score" title="No form data" style="background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.6rem">·</span>`;
     }
