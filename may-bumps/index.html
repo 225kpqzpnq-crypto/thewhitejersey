@@ -618,16 +618,22 @@ function dayIsLocked(di) { return di < RECORDED_DAYS; }
 // chased crew slower. Nudge Net Form accordingly so the Form Guide scores and
 // all future-day predictions reflect what actually happened on the water:
 // bumpers get faster (time ↓), crews that were bumped get slower (time ↑).
-// Crews that rowed over are unchanged. Applied symmetrically per bump.
-const RESULT_ADJ_SEC = 5;  // seconds of Net Form shift per crew, per bump
+// Crews that rowed over are unchanged.
+//
+// Applied ASYMMETRICALLY: a bump is strong evidence of genuine speed, whereas
+// being bumped is often a clash/steering/luck event — so reward the bumper more
+// than we punish the victim. (This is the lasting "the bumper is faster" credit;
+// the recency-based "shouldn't be re-bumped" effect lives in bumpMomentum below.)
+const BUMP_REWARD_SEC    = 7;  // Net Form the bumper gains (time ↓) per bump
+const BUMPED_PENALTY_SEC = 4;  // Net Form the bumped crew loses (time ↑) per bump
 // Snapshot of Net Form BEFORE any results are applied — used for the
 // "Score (pre)" column on the Form Guide so the bump effect is visible.
 const FORM_TIMES_PRE = {...FORM_TIMES};
 (function applyResultsToForm(){
   for (let di = 0; di < RECORDED_DAYS; di++){
     for (const b of RECORDED_BUMPS[di]){
-      if (FORM_TIMES[b.bumperName] != null) FORM_TIMES[b.bumperName] -= RESULT_ADJ_SEC;
-      if (FORM_TIMES[b.bumpedName] != null) FORM_TIMES[b.bumpedName] += RESULT_ADJ_SEC;
+      if (FORM_TIMES[b.bumperName] != null) FORM_TIMES[b.bumperName] -= BUMP_REWARD_SEC;
+      if (FORM_TIMES[b.bumpedName] != null) FORM_TIMES[b.bumpedName] += BUMPED_PENALTY_SEC;
     }
   }
   // getFormScore caches the fastest time lazily; reset so it picks up the shifts.
@@ -703,6 +709,41 @@ function bumpProbability(gap) {
   return Math.min(0.55 / gap, 0.7);
 }
 
+// ── Bump momentum: "a crew that bumped recently shouldn't be re-bumped" ──────
+// A crew that bumped on an earlier day has demonstrated it can row through the
+// crew ahead. The day after, it is disproportionately hard to catch from behind
+// — and that protection fades as the week goes on. We model this as a direct
+// reduction to the probability of *catching* such a crew (it being the prey),
+// on top of the Net Form credit it already earned.
+const PROTECT_MAX = 0.60;   // max cut to the catch probability (day immediately after a bump)
+// Decay of the protection by gap = (day being simulated) − (day the crew last bumped):
+//   gap 1 → 1.00, gap 2 → 0.50, gap 3 → 0.25, …  (halves each further day)
+
+// Map of crew → most recent 1-indexed day on which they bumped, considering only
+// COMMITTED bumps on days strictly before `beforeDayIdx` (0-indexed). Used to feed
+// protection into predictions; for the multi-day Predict All this means a bump
+// simulated on an earlier day also protects that crew on later days.
+function buildMomentum(beforeDayIdx){
+  const last = {};
+  for (let d = 0; d < beforeDayIdx; d++){
+    for (const b of (state.dayBumps[d] || [])){
+      last[b.bumperName] = d + 1;   // store as 1-indexed day number
+    }
+  }
+  return last;
+}
+
+// Multiplier (≤1) applied to the chance of catching `prey` on `simDay` (1-indexed),
+// given a momentum map from buildMomentum(). 1 = no protection.
+function protectFactor(prey, simDay, momentum){
+  const lastBumpDay = momentum && momentum[prey];
+  if (!lastBumpDay) return 1;
+  const gap = simDay - lastBumpDay;
+  if (gap <= 0) return 1;
+  const decay = Math.pow(0.5, gap - 1);   // 1.0, 0.5, 0.25, …
+  return 1 - PROTECT_MAX * decay;
+}
+
 function simulateDay(divisions) {
   const divs  = divisions.map(d => [...d]);
   const done  = new Set();
@@ -754,7 +795,7 @@ function simulateDay(divisions) {
   return {newDivisions:divs, bumps};
 }
 
-function simulateDayForm(divisions) {
+function simulateDayForm(divisions, simDay = 99, momentum = null) {
   const divs  = divisions.map(d => [...d]);
   const done  = new Set();
   const bumps = [];
@@ -766,7 +807,8 @@ function simulateDayForm(divisions) {
       const ck = `${d}:${chaser}`, pk = `${d}:${prey}`;
       if (done.has(ck) || done.has(pk)) continue;
       const ct = getFormTime(chaser), pt = getFormTime(prey);
-      const prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : bumpProbability(1);
+      let prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : bumpProbability(1);
+      prob *= protectFactor(prey, simDay, momentum);   // recent bumper is hard to re-bump
       if (Math.random() < prob) {
         done.add(ck); done.add(pk);
         // Regular bump = adjacent swap.
@@ -777,7 +819,8 @@ function simulateDayForm(divisions) {
           const ock = `${d}:${oc}`, otk = `${d}:${ot}`;
           if (!done.has(ock) && !done.has(otk)) {
             const oct = getFormTime(oc), ott = getFormTime(ot);
-            const obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : bumpProbability(1) * 0.65;
+            let obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : bumpProbability(1) * 0.65;
+            obp *= protectFactor(ot, simDay, momentum);   // protect a recent bumper from being overbumped
             if (Math.random() < obp) {
               done.add(ock); done.add(otk);
               // Overbump = symmetric swap; the bump pair between them stays put.
@@ -796,7 +839,8 @@ function simulateDayForm(divisions) {
     const bk = `${d}:${bot}`, tk = `${d+1}:${top}`;
     if (!done.has(bk) && !done.has(tk)) {
       const bt = getFormTime(bot), tt = getFormTime(top);
-      const prob = (bt !== null && tt !== null) ? formBumpProb(tt, bt) * 0.6 : bumpProbability(1) * 0.6;
+      let prob = (bt !== null && tt !== null) ? formBumpProb(tt, bt) * 0.6 : bumpProbability(1) * 0.6;
+      prob *= protectFactor(bot, simDay, momentum);   // protect a recent bumper at the division boundary
       if (Math.random() < prob) {
         done.add(bk); done.add(tk);
         upper[upper.length-1] = top; lower[0] = bot;
@@ -813,11 +857,11 @@ function simulateDayForm(divisions) {
 // each (divIdx, bumper, bumped) pair fires across trials, then build the most
 // likely *consistent* outcome by greedily picking high-probability bumps that
 // don't conflict (a crew can only be in one bump per day).
-function simulateDayFormMC(divisions, N){
+function simulateDayFormMC(divisions, N, simDay = 99, momentum = null){
   N = N || 400;
   const counts = new Map();
   for (let t = 0; t < N; t++){
-    const {bumps} = simulateDayForm(divisions);
+    const {bumps} = simulateDayForm(divisions, simDay, momentum);
     for (const b of bumps){
       const flag = b.sandwich ? 'S' : (b.overbump ? 'O' : 'N');
       const key  = `${b.divIdx}|${b.bumper}|${b.bumped}|${flag}`;
@@ -1793,7 +1837,8 @@ function simulateDayFormN(di) {
   if (dayIsLocked(di)) { toast(`Day ${di+1} is a recorded result — locked.`, 'error'); return; }
   const startDivs = getStandings(di + 1);
   // Monte Carlo: 400 trials → modal outcome + per-pair probabilities.
-  const {bumps, probs} = simulateDayFormMC(startDivs, 400);
+  // Momentum from all committed days before this one protects recent bumpers.
+  const {bumps, probs} = simulateDayFormMC(startDivs, 400, di + 1, buildMomentum(di));
   state.dayBumps[di]      = simBumpsToManual(bumps);
   state.dayProbs          = state.dayProbs || [null, null, null, null];
   state.dayProbs[di]      = probs;
@@ -1808,7 +1853,9 @@ function formSimAll() {
   // Locked days hold recorded results — only predict from the first open day.
   for (let di = RECORDED_DAYS; di < TOTAL_DAYS; di++) {
     const startDivs = getStandings(di + 1);
-    const {bumps} = simulateDayForm(startDivs);
+    // Build momentum from earlier days (recorded + days already predicted in this
+    // loop) so a simulated bump protects that crew on the following days too.
+    const {bumps} = simulateDayForm(startDivs, di + 1, buildMomentum(di));
     state.dayBumps[di]      = simBumpsToManual(bumps);
     state.pendingBumps[di]  = [];
     state.activeBumpers[di] = null;
