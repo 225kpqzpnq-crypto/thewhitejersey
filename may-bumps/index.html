@@ -209,6 +209,23 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .threat-low{background:rgba(52,211,153,.1);color:var(--green)}
 .fg-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:var(--text-dim);margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
 .fg-legend span{display:flex;align-items:center;gap:4px}
+.fg-upsets{margin-bottom:20px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;border-left:3px solid var(--yellow)}
+.fg-upsets-title{font-size:1rem;font-weight:800;margin-bottom:4px}
+.fg-upsets-note{font-size:.72rem;color:var(--text-dim);margin-bottom:12px}
+.fg-upset-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:8px}
+.fg-upset-row+.fg-upset-row{margin-top:6px}
+.fg-upset-row:nth-child(odd){background:rgba(255,255,255,.02)}
+.fg-upset-top{background:rgba(251,191,36,.12);outline:1px solid rgba(251,191,36,.4)}
+.fg-upset-rank{flex:0 0 22px;height:22px;border-radius:50%;background:var(--border);color:var(--text);font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+.fg-upset-top .fg-upset-rank{background:var(--yellow);color:#1a1206}
+.fg-upset-main{flex:1;min-width:0}
+.fg-upset-match{font-size:.9rem}
+.fg-upset-bumper{font-weight:800;color:var(--green)}
+.fg-upset-arrow{opacity:.55;font-size:.78rem;margin:0 6px}
+.fg-upset-prey{font-weight:700;color:var(--red)}
+.fg-upset-sub{font-size:.72rem;color:var(--text-dim);margin-top:2px}
+.fg-upset-gap{flex:0 0 auto;text-align:right;font-weight:800;color:var(--yellow);font-size:1rem;line-height:1.05}
+.fg-upset-gap span{display:block;font-size:.6rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
 .nav-tab{padding:6px 14px;border-radius:6px;border:1px solid var(--border);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s}
 .nav-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .nav-tab:not(.active){background:transparent;color:var(--text-dim)}
@@ -349,6 +366,17 @@ function getFormScore(crew) {
   return (FASTEST_FORM_TIME / t) * 100;
 }
 
+// Pre-bumps form score, computed from the snapshot taken before recorded
+// results were applied. Uses its own fastest-time cache (FORM_TIMES_PRE is
+// initialised later, but this only runs at render time).
+let FASTEST_FORM_TIME_PRE = null;
+function getFormScorePre(crew) {
+  if (FASTEST_FORM_TIME_PRE == null) FASTEST_FORM_TIME_PRE = Math.min(...Object.values(FORM_TIMES_PRE));
+  const t = FORM_TIMES_PRE[crew];
+  if (t == null) return null;
+  return (FASTEST_FORM_TIME_PRE / t) * 100;
+}
+
 // P(bump): linear model calibrated on 2026 benchmark data
 // base 30% for equal-speed crews; +2% per second of H2H advantage
 function formBumpProb(chaserTime, preyTime) {
@@ -366,7 +394,7 @@ function fmtSec(s) {
 //  STATE
 // ════════════════════════════════════════════════
 
-let state = initState();
+let state;  // initialised below, once RECORDED_BUMPS exists and form results are applied
 let showFormTimes = false;
 let sidebarTab = 'catz'; // 'catz' | 'form'
 let currentPage = 'sim'; // 'sim' | 'form'
@@ -545,10 +573,113 @@ const CLUB_INFLUENCED = new Set();
   }
 })();
 
+// ── Recorded actual results ───────────────────────────────────────────────
+// Real bumps as they happened on the water, indexed by day (0 = Day 1).
+// Source: https://bumps.camfm.co.uk/?allboats=true
+// Each entry: {bumperName, bumpedName, divIdx, isSandwich, isOverbump}.
+// A `null` day means it hasn't been raced yet. Add Day 2-4 arrays here as
+// results come in; initState() seeds state.dayBumps from this.
+// divIdx: 0 = Div 1 (O1), 1 = Div 2 (O2), 2 = Div 3 (O3).
+// Note on the Div 3 boundary: Lady Margaret III (O3 #17) was actually bumped
+// down by Pembroke III, an O4 crew this simulator does not model, so it stays
+// at the foot of Div 3 here.
+const RECORDED_BUMPS = [
+  // ── Day 1 — 17 June 2026 ──
+  [
+    // Division 1 (O1)
+    {bumperName:"Peterhouse",        bumpedName:"Lady Margaret",     divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"King's",            bumpedName:"Downing",           divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"Pembroke",          bumpedName:"Selwyn",            divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"Clare",             bumpedName:"Lady Margaret II",  divIdx:0, isSandwich:false, isOverbump:false},
+    // Sandwich: First and Third (top of O2) bumps Hughes Hall (bottom of O1)
+    {bumperName:"First and Third",   bumpedName:"Hughes Hall",       divIdx:0, isSandwich:true,  isOverbump:false},
+    // Division 2 (O2)
+    {bumperName:"Caius II",          bumpedName:"Wolfson",           divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"Christ's",          bumpedName:"Girton",            divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"Darwin",            bumpedName:"Jesus II",          divIdx:1, isSandwich:false, isOverbump:false},
+    // Division 3 (O3)
+    {bumperName:"St. Catharine's II",bumpedName:"Downing II",        divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Magdalene II",      bumpedName:"Clare Hall",        divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Emmanuel III",      bumpedName:"Clare II",          divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Christ's II",       bumpedName:"Churchill II",      divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Lucy Cavendish",    bumpedName:"Trinity Hall II",   divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Jesus III",         bumpedName:"Robinson II",       divIdx:2, isSandwich:false, isOverbump:false},
+  ],
+];
+
+// Number of days that hold real on-the-water results. These days are LOCKED:
+// they can't be re-simulated, edited or cleared, and "Form Predict All" only
+// fills the days after them.
+const RECORDED_DAYS = RECORDED_BUMPS.length;
+function dayIsLocked(di) { return di < RECORDED_DAYS; }
+
+// ── Apply recorded results to the form model ───────────────────────────────
+// A bump is direct evidence the chasing crew is faster than expected and the
+// chased crew slower. Nudge Net Form accordingly so the Form Guide scores and
+// all future-day predictions reflect what actually happened on the water:
+// bumpers get faster (time ↓), crews that were bumped get slower (time ↑).
+// Crews that rowed over are unchanged. Applied symmetrically per bump.
+const RESULT_ADJ_SEC = 5;  // seconds of Net Form shift per crew, per bump
+// Snapshot of Net Form BEFORE any results are applied — used for the
+// "Score (pre)" column on the Form Guide so the bump effect is visible.
+const FORM_TIMES_PRE = {...FORM_TIMES};
+(function applyResultsToForm(){
+  for (let di = 0; di < RECORDED_DAYS; di++){
+    for (const b of RECORDED_BUMPS[di]){
+      if (FORM_TIMES[b.bumperName] != null) FORM_TIMES[b.bumperName] -= RESULT_ADJ_SEC;
+      if (FORM_TIMES[b.bumpedName] != null) FORM_TIMES[b.bumpedName] += RESULT_ADJ_SEC;
+    }
+  }
+  // getFormScore caches the fastest time lazily; reset so it picks up the shifts.
+  FASTEST_FORM_TIME = null;
+})();
+
+// Net bumps "to date" for a crew, counting only recorded (locked) days.
+function recordedNet(crew){
+  let ups = 0, downs = 0;
+  for (let di = 0; di < RECORDED_DAYS; di++){
+    for (const b of (RECORDED_BUMPS[di] || [])){
+      if (b.bumperName === crew) ups++;
+      if (b.bumpedName === crew) downs++;
+    }
+  }
+  return {ups, downs, net: ups - downs};
+}
+
+// Upsets: recorded bumps where the chasing crew was SLOWER on pre-bumps form
+// than the crew it caught. Magnitude = how many seconds slower (on paper) the
+// bumper was — bigger = more against the form book. Returns those sorted
+// biggest-first; bumps with no form data for either crew are skipped.
+function computeUpsets(){
+  const DIV_NAMES = ["Div 1", "Div 2", "Div 3"];
+  const out = [];
+  for (let di = 0; di < RECORDED_DAYS; di++){
+    for (const b of (RECORDED_BUMPS[di] || [])){
+      const tb = FORM_TIMES_PRE[b.bumperName];   // bumper pre-bumps form time
+      const tp = FORM_TIMES_PRE[b.bumpedName];   // prey pre-bumps form time
+      if (tb == null || tp == null) continue;
+      const secUpset = tb - tp;                  // +ve = bumper slower on paper = upset
+      if (secUpset <= 0) continue;               // form held (or coin-flip) — not an upset
+      out.push({
+        day: di + 1,
+        div: DIV_NAMES[b.divIdx],
+        bumper: b.bumperName,
+        prey: b.bumpedName,
+        isSandwich: b.isSandwich,
+        secUpset,
+        bumperScore: getFormScorePre(b.bumperName),
+        preyScore:   getFormScorePre(b.bumpedName),
+      });
+    }
+  }
+  return out.sort((a, b) => b.secUpset - a.secUpset);
+}
+
 function initState() {
   return {
     // dayBumps[i]: null = not yet entered; array = committed bumps (may be empty = rowed over)
-    dayBumps:     [null, null, null, null],
+    // Seeded from RECORDED_BUMPS so on-the-water results show on load.
+    dayBumps:     [0,1,2,3].map(i => RECORDED_BUMPS[i] ? [...RECORDED_BUMPS[i]] : null),
     // pendingBumps[i]: bumps being built in manual mode (not yet committed)
     pendingBumps: [[], [], [], []],
     // activeBumpers[i]: {div, pos, name} of the currently selected bumper for day i
@@ -559,6 +690,9 @@ function initState() {
     dayProbs:     [null, null, null, null],
   };
 }
+
+// Now that RECORDED_BUMPS exists and results have been applied, seed state.
+state = initState();
 
 // ════════════════════════════════════════════════
 //  SIMULATION ENGINE
@@ -838,6 +972,38 @@ function fmtH2H(s) {
   return `${m}:${sec}`;
 }
 
+// Panel listing the day's biggest form upsets (slower-on-paper crews that bumped).
+function renderUpsetsPanel(){
+  if (RECORDED_DAYS === 0) return '';
+  const upsets = computeUpsets();
+  if (!upsets.length){
+    return `<div class="fg-upsets">
+      <div class="fg-upsets-title">⚡ Biggest upsets — through Day ${RECORDED_DAYS}</div>
+      <div style="opacity:.7;font-size:13px">No upsets yet — every bump so far went the way the form book predicted.</div>
+    </div>`;
+  }
+  const rows = upsets.map((u, i) => {
+    const top = i === 0;
+    return `<div class="fg-upset-row${top ? ' fg-upset-top' : ''}">
+      <div class="fg-upset-rank">${i + 1}</div>
+      <div class="fg-upset-main">
+        <div class="fg-upset-match">
+          <span class="fg-upset-bumper">${u.bumper}${u.isSandwich ? ' <span style="opacity:.6;font-weight:400">(sandwich)</span>' : ''}</span>
+          <span class="fg-upset-arrow">bumped</span>
+          <span class="fg-upset-prey">${u.prey}</span>
+        </div>
+        <div class="fg-upset-sub">${u.div}, Day ${u.day} · form scores ${u.bumperScore.toFixed(1)} vs <strong>${u.preyScore.toFixed(1)}</strong></div>
+      </div>
+      <div class="fg-upset-gap" title="How much slower on pre-bumps form the bumping crew was">+${u.secUpset.toFixed(1)}s<span>on paper</span></div>
+    </div>`;
+  }).join('');
+  return `<div class="fg-upsets">
+    <div class="fg-upsets-title">⚡ Biggest upsets — through Day ${RECORDED_DAYS}</div>
+    <div class="fg-upsets-note">Crews that bumped despite being <em>slower</em> on pre-bumps form. Gap = seconds slower (on paper) the bumping crew was than the crew it caught.</div>
+    ${rows}
+  </div>`;
+}
+
 function renderFormGuidePage() {
   const divTitles  = ["Men's Division 1", "Men's Division 2", "Men's Division 3"];
   const divClasses = ['fg-div1', 'fg-div2', 'fg-div3'];
@@ -851,12 +1017,15 @@ function renderFormGuidePage() {
     <span>R = RAD Mile 2026 estimate (2000m time × 2.04)</span>
     <span>C = Champs VIII Head 2026 estimate (time × 2.35)</span>
     <span>Lent = Lent Bumps 2026 net (with end position)</span>
-    <span>Score = Net Form score /100 (100 = Caius, fastest)</span>
+    <span>Bumps = net bumps to date (recorded days)</span>
+    <span>Score (pre) = Net Form /100 before bumps · Score (post) = after recorded results</span>
     <span><em>italic + "pred"</em> = predicted from Lent finishing position (no race data)</span>
     <span><span style="color:var(--green)">■</span> faster than my boat</span>
     <span><span style="color:var(--red)">■</span> slower than my boat</span>
     <span>Δ = seconds vs ${MY_BOAT} (positive = crew faster)</span>
   </div>`;
+
+  html += renderUpsetsPanel();
 
   const ref = getRef();
   for (let d = 0; d < 3; d++) {
@@ -876,7 +1045,9 @@ function renderFormGuidePage() {
           <th class="r">Champs VIII</th>
           ${showDelta ? '<th class="r">Δ Mine</th>' : ''}
           <th class="r">Lent</th>
-          <th class="r">Score</th>
+          <th class="r">Bumps</th>
+          <th class="r">Score (pre)</th>
+          <th class="r">Score (post)</th>
           <th style="text-align:center">Src</th>
           <th>Notes</th>
         </tr></thead>
@@ -921,20 +1092,37 @@ function renderFormGuidePage() {
         lentClass = row.lentNet > 0 ? 'fg-fast' : (row.lentNet < 0 ? 'fg-slow' : '');
       }
 
+      // Net bumps to date (recorded days only): + up, − down.
+      const nb = recordedNet(row.crew);
+      let bumpsStr = '—', bumpsClass = 'fg-none';
+      if (RECORDED_DAYS > 0) {
+        if (nb.net > 0)      { bumpsStr = `<strong>+${nb.net}</strong>`; bumpsClass = 'fg-fast'; }
+        else if (nb.net < 0) { bumpsStr = `<strong>−${Math.abs(nb.net)}</strong>`; bumpsClass = 'fg-slow'; }
+        else                 { bumpsStr = '0'; bumpsClass = ''; }
+      }
+
       // Form score /100 (100 = fastest crew). Predicted scores (from Lent
       // interpolation rather than race times) are shown in italics with a tag.
-      const score = getFormScore(row.crew);
+      // Pre = before results applied; Post = after recorded bumps shifted form.
       const isPredicted = PREDICTED_FORM.has(row.crew);
-      let scoreStr, scoreClass;
-      if (score == null) {
-        scoreStr = '—'; scoreClass = 'fg-none';
-      } else if (isPredicted) {
-        scoreStr = `<em style="opacity:.85">${score.toFixed(1)}</em> <span style="opacity:.6;font-size:11px">pred</span>`;
-        scoreClass = '';
-      } else {
-        scoreStr = score.toFixed(1);
-        scoreClass = '';
+      const fmtScore = (s) => {
+        if (s == null) return '—';
+        return isPredicted
+          ? `<em style="opacity:.85">${s.toFixed(1)}</em> <span style="opacity:.6;font-size:11px">pred</span>`
+          : s.toFixed(1);
+      };
+      const scorePre  = getFormScorePre(row.crew);
+      const scorePost = getFormScore(row.crew);
+      const preStr  = fmtScore(scorePre);
+      const postStr = fmtScore(scorePost);
+      // Colour the post score relative to pre: improved (faster) = green.
+      let postClass = '';
+      if (scorePre != null && scorePost != null) {
+        const d = scorePost - scorePre;
+        if (d > 0.05)      postClass = 'fg-fast';
+        else if (d < -0.05) postClass = 'fg-slow';
       }
+      const preClass = (scorePre == null) ? 'fg-none' : '';
 
       html += `<tr class="${isCatz ? 'catz-row' : ''}">
         <td class="fg-pos">${row.pos}</td>
@@ -946,7 +1134,9 @@ function renderFormGuidePage() {
         <td class="fg-time ${champsStr ? deltaClass(champsDelta) : 'fg-none'}">${champsStr ?? '—'}</td>
         ${showDelta ? `<td class="fg-delta ${deltaClass(champsDelta)}">${showDelta ? deltaStr(champsDelta) : ''}</td>` : ''}
         <td class="fg-time r ${lentClass}">${lentStr}</td>
-        <td class="fg-time r ${scoreClass}"><strong>${scoreStr}</strong></td>
+        <td class="fg-time r ${bumpsClass}">${bumpsStr}</td>
+        <td class="fg-time r ${preClass}"><strong>${preStr}</strong></td>
+        <td class="fg-time r ${postClass}"><strong>${postStr}</strong></td>
         <td class="fg-src">${src}</td>
         <td class="fg-note">${row.note ?? ''}</td>
       </tr>`;
@@ -1051,7 +1241,7 @@ function renderDayCol(divIdx, day, di) {
   const colCls = `day-col ${isDone ? 'day-col-done' : isManual ? 'day-col-active' : ''}`;
 
   const statusText = isDone
-    ? `✓ Raced — ${state.dayBumps[di].length} bump${state.dayBumps[di].length!==1?'s':''}`
+    ? `${dayIsLocked(di) ? '🔒 Result' : '✓ Raced'} — ${state.dayBumps[di].length} bump${state.dayBumps[di].length!==1?'s':''}`
     : isManual
     ? `✏️ Manual — ${state.pendingBumps[di].length} bump${state.pendingBumps[di].length!==1?'s':''} pending`
     : 'Not yet raced';
@@ -1066,6 +1256,8 @@ function renderDayCol(divIdx, day, di) {
     } else {
       controls += `<button class="btn-icon btn-secondary" onclick="toggleManualN(${di})" title="Manual input">✏️</button>`;
     }
+  } else if (dayIsLocked(di)) {
+    controls += `<span class="btn-icon" title="Recorded result — locked" style="cursor:default;opacity:.8">🔒</span>`;
   } else {
     controls += `<button class="btn-icon btn-secondary" onclick="editDayN(${di})" title="Edit predicted bumps">✏️</button> `;
     controls += `<button class="btn-icon btn-danger" onclick="clearDayN(${di})" title="Clear this day">✕</button>`;
@@ -1461,6 +1653,7 @@ function renderMCPanel(){
 // ════════════════════════════════════════════════
 
 function simulateDayN(di) {
+  if (dayIsLocked(di)) { toast(`Day ${di+1} is a recorded result — locked.`, 'error'); return; }
   const startDivs = getStandings(di + 1);
   const {newDivisions, bumps} = simulateDay(startDivs);
   state.dayBumps[di]     = simBumpsToManual(bumps);
@@ -1478,6 +1671,7 @@ function simulateDayN(di) {
 }
 
 function toggleManualN(di) {
+  if (dayIsLocked(di)) { toast(`Day ${di+1} is a recorded result — locked.`, 'error'); return; }
   state.manualModes[di] = !state.manualModes[di];
   if (!state.manualModes[di]) {
     state.activeBumpers[di] = null;
@@ -1496,6 +1690,7 @@ function confirmDayN(di) {
 }
 
 function editDayN(di) {
+  if (dayIsLocked(di)) { toast(`Day ${di+1} is a recorded result — locked.`, 'error'); return; }
   state.pendingBumps[di]  = [...state.dayBumps[di]];
   state.dayBumps[di]      = null;
   state.activeBumpers[di] = null;
@@ -1511,6 +1706,7 @@ function removePendingBump(di, idx) {
 }
 
 function clearDayN(di) {
+  if (dayIsLocked(di)) { toast(`Day ${di+1} is a recorded result — locked.`, 'error'); return; }
   state.dayBumps[di]     = null;
   state.pendingBumps[di] = [];
   state.activeBumpers[di]= null;
@@ -1594,6 +1790,7 @@ function checkSandwich(bumper, bumpedDiv, bumpedPos) {
 }
 
 function simulateDayFormN(di) {
+  if (dayIsLocked(di)) { toast(`Day ${di+1} is a recorded result — locked.`, 'error'); return; }
   const startDivs = getStandings(di + 1);
   // Monte Carlo: 400 trials → modal outcome + per-pair probabilities.
   const {bumps, probs} = simulateDayFormMC(startDivs, 400);
@@ -1608,7 +1805,8 @@ function simulateDayFormN(di) {
 }
 
 function formSimAll() {
-  for (let di = 0; di < TOTAL_DAYS; di++) {
+  // Locked days hold recorded results — only predict from the first open day.
+  for (let di = RECORDED_DAYS; di < TOTAL_DAYS; di++) {
     const startDivs = getStandings(di + 1);
     const {bumps} = simulateDayForm(startDivs);
     state.dayBumps[di]      = simBumpsToManual(bumps);
@@ -1634,10 +1832,10 @@ function toggleSidebarTab(tab) {
 }
 
 function resetSim() {
-  if (!confirm('Reset to the 2025 start order?')) return;
+  if (!confirm('Clear all predictions? Recorded (locked) results are kept.')) return;
   state = initState();
   render();
-  toast('Reset to 2025 start order!');
+  toast('Predictions cleared — recorded results kept.');
 }
 
 // ════════════════════════════════════════════════
