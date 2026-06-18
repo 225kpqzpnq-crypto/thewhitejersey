@@ -377,11 +377,25 @@ function getFormScorePre(crew) {
   return (FASTEST_FORM_TIME_PRE / t) * 100;
 }
 
-// P(bump): linear model calibrated on 2026 benchmark data
-// base 30% for equal-speed crews; +2% per second of H2H advantage
+// P(bump): linear model RECALIBRATED on the Day 1–2 2026 results.
+// The original curve (base .30, slope .020, clamp .03–.95) was badly mis-shaped:
+//   • Big paper favourites rowed over far more than predicted — crews 30–50s
+//     faster bumped only ~60% of the time, and the very biggest favourites
+//     (50s+) actually went DOWN to ~20% because the crew ahead clears out
+//     first (a row-over chain), so the chaser never gets contact.
+//   • "Impossible" upsets (slower-on-paper crew bumps) landed ~1 in 5, not the
+//     3% the floor allowed — lower-division form data is noisy/incomplete.
+// Net: the true relationship is much flatter. We raise the floor, drop the
+// ceiling and roughly halve the slope. Validated out-of-sample on Day 2
+// (Brier 0.191→0.175, log-loss 0.644→0.524). Re-fit as more days come in.
+const FORM_BASE   = 0.28;   // equal-speed crews            (was 0.30)
+const FORM_SLOPE  = 0.012;  // per second of H2H advantage  (was 0.020)
+const FORM_FLOOR  = 0.12;   // upsets still happen ~1 in 5  (was 0.03)
+const FORM_CEIL   = 0.70;   // even big favourites ~60-70%  (was 0.95)
+const NO_DATA_PROB = 0.45;  // fallback for a pair with no form data (was 0.55)
 function formBumpProb(chaserTime, preyTime) {
   const delta = preyTime - chaserTime; // +ve = chaser faster = more likely
-  return Math.max(0.03, Math.min(0.95, 0.30 + delta * 0.020));
+  return Math.max(FORM_FLOOR, Math.min(FORM_CEIL, FORM_BASE + delta * FORM_SLOPE));
 }
 
 function fmtSec(s) {
@@ -833,7 +847,7 @@ function simulateDayForm(divisions, simDay = 99, momentum = null) {
       const ck = `${d}:${chaser}`, pk = `${d}:${prey}`;
       if (done.has(ck) || done.has(pk)) continue;
       const ct = getFormTime(chaser), pt = getFormTime(prey);
-      let prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : bumpProbability(1);
+      let prob = (ct !== null && pt !== null) ? formBumpProb(ct, pt) : NO_DATA_PROB;
       prob *= protectFactor(prey, simDay, momentum);   // recent bumper is hard to re-bump
       if (Math.random() < prob) {
         done.add(ck); done.add(pk);
@@ -845,7 +859,7 @@ function simulateDayForm(divisions, simDay = 99, momentum = null) {
           const ock = `${d}:${oc}`, otk = `${d}:${ot}`;
           if (!done.has(ock) && !done.has(otk)) {
             const oct = getFormTime(oc), ott = getFormTime(ot);
-            let obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : bumpProbability(1) * 0.65;
+            let obp = (oct !== null && ott !== null) ? formBumpProb(oct, ott) * 0.65 : NO_DATA_PROB * 0.65;
             obp *= protectFactor(ot, simDay, momentum);   // protect a recent bumper from being overbumped
             if (Math.random() < obp) {
               done.add(ock); done.add(otk);
@@ -865,7 +879,7 @@ function simulateDayForm(divisions, simDay = 99, momentum = null) {
     const bk = `${d}:${bot}`, tk = `${d+1}:${top}`;
     if (!done.has(bk) && !done.has(tk)) {
       const bt = getFormTime(bot), tt = getFormTime(top);
-      let prob = (bt !== null && tt !== null) ? formBumpProb(tt, bt) * 0.6 : bumpProbability(1) * 0.6;
+      let prob = (bt !== null && tt !== null) ? formBumpProb(tt, bt) * 0.6 : NO_DATA_PROB * 0.6;
       prob *= protectFactor(bot, simDay, momentum);   // protect a recent bumper at the division boundary
       if (Math.random() < prob) {
         done.add(bk); done.add(tk);
