@@ -387,7 +387,12 @@ function getFormScorePre(crew) {
 //     3% the floor allowed — lower-division form data is noisy/incomplete.
 // Net: the true relationship is much flatter. We raise the floor, drop the
 // ceiling and roughly halve the slope. Validated out-of-sample on Day 2
-// (Brier 0.191→0.175, log-loss 0.644→0.524). Re-fit as more days come in.
+// (Brier 0.191→0.175, log-loss 0.644→0.524).
+// Day 3 re-check (tune on Days 1–2, validate on Day 3): these constants give
+// Day-3 Brier 0.104 / log-loss 0.350, and the best Day-1–2 minimiser does
+// WORSE out-of-sample on Day 3 (Brier 0.113, log-loss 0.371) — so kept as-is.
+// Watch-item: deep underdogs (Δ≤−20s) bumped ~0.17 vs model ~0.09, but raising
+// FORM_FLOOR to chase that hurt the held-out day, so not adopted. Re-fit as days come in.
 const FORM_BASE   = 0.28;   // equal-speed crews            (was 0.30)
 const FORM_SLOPE  = 0.012;  // per second of H2H advantage  (was 0.020)
 const FORM_FLOOR  = 0.12;   // upsets still happen ~1 in 5  (was 0.03)
@@ -644,6 +649,34 @@ const RECORDED_BUMPS = [
     {bumperName:"Selwyn II",         bumpedName:"Clare II",          divIdx:2, isSandwich:false, isOverbump:false},
     {bumperName:"Lucy Cavendish",    bumpedName:"Fitzwilliam II",    divIdx:2, isSandwich:false, isOverbump:false},
     {bumperName:"Jesus III",         bumpedName:"Trinity Hall II",   divIdx:2, isSandwich:false, isOverbump:false},
+  ],
+  // ── Day 3 — 19 June 2026 ──
+  [
+    // Division 1 (O1)
+    {bumperName:"King's",            bumpedName:"Magdalene",         divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"Pembroke",          bumpedName:"St. Catharine's",   divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"Queens'",           bumpedName:"Downing",           divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"Clare",             bumpedName:"Selwyn",            divIdx:0, isSandwich:false, isOverbump:false},
+    {bumperName:"First and Third",   bumpedName:"Lady Margaret II",  divIdx:0, isSandwich:false, isOverbump:false},
+    // Sandwich: Churchill (top of O2) bumps Robinson (bottom of O1)
+    {bumperName:"Churchill",         bumpedName:"Robinson",          divIdx:0, isSandwich:true,  isOverbump:false},
+    // Division 2 (O2)
+    {bumperName:"Caius II",          bumpedName:"Hughes Hall",       divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"Trinity Hall",      bumpedName:"Wolfson",           divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"First and Third II",bumpedName:"Emmanuel II",       divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"Homerton",          bumpedName:"Pembroke II",       divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"Darwin",            bumpedName:"Corpus Christi",    divIdx:1, isSandwich:false, isOverbump:false},
+    {bumperName:"Peterhouse II",     bumpedName:"Jesus II",          divIdx:1, isSandwich:false, isOverbump:false},
+    // Division 3 (O3)
+    // Boundary churn (Pembroke III & King's II ↑ from O4; Wolfson II & Lady
+    // Margaret III ↓ to O4) is unmodeled — Robinson II was bumped down by
+    // Pembroke III, an O4 crew; per the Div 3 note above the relegated crews
+    // stay notionally at the foot here.
+    {bumperName:"Queens' II",        bumpedName:"Downing II",        divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Emmanuel III",      bumpedName:"Clare Hall",        divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Christ's II",       bumpedName:"Clare II",          divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Lucy Cavendish",    bumpedName:"Churchill II",      divIdx:2, isSandwich:false, isOverbump:false},
+    {bumperName:"Jesus III",         bumpedName:"Fitzwilliam II",    divIdx:2, isSandwich:false, isOverbump:false},
   ],
 ];
 
